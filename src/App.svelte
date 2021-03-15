@@ -1,13 +1,31 @@
 <script>
-	export let name;
+	import { onMount } from "svelte";
+
+	let canvas, ctx, stream;
+
+	async function getMedia(constraints) {
+		let stream = null;
+		try {
+			stream = await navigator.mediaDevices.getUserMedia(constraints);
+			/* use the stream */
+		} catch (err) {
+			console.log("error in getting input stream: " + err.message);
+		}
+		return stream;
+	}
+
+	onMount(async () => {
+		ctx = canvas.getContext("webgl");
+		stream = await getMedia({
+			video: true, // navigator.mediaDevices.getSupportedConstraints()
+		});
+	});
+
+	$: console.log(ctx);
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>
-		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
-		how to build Svelte apps.
-	</p>
+	<canvas width="1280" height="720" bind:this={canvas} />
 </main>
 
 <style global>
