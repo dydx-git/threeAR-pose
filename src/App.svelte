@@ -5,7 +5,7 @@
 	import Stats from "stats.js/build/stats.min.js";
 	import { poseNet } from "ml5";
 
-	let canvas, ctx, stream;
+	let canvas, video, stream;
 	let stats, scene, renderer;
 	let mesh;
 	let camera;
@@ -136,30 +136,31 @@
 	}
 
 	onMount(async () => {
-		ctx = canvas.getContext("webgl");
+		// ctx = canvas.getContext("webgl");
 		stream = await getMedia({
 			video: true, // navigator.mediaDevices.getSupportedConstraints()
 		});
 		document.querySelector("video").srcObject = stream;
 		if (!init()) {
-			poseNetModel = poseNet(stream, modelLoaded);
+			poseNetModel = poseNet(video, modelLoaded);
 			poseNetModel.on("pose", function (results) {
 				poses = results;
+				console.log(poses);
 			});
 			loadModels();
 			animate();
 		}
 	});
 
-	$: if (poses) {
-		drawKeypoints();
-		drawSkeleton();
-	}
+	// $: if (poses) {
+	// 	drawKeypoints();
+	// 	drawSkeleton();
+	// }
 </script>
 
 <main>
 	<div id="container">
-		<video autoplay="true" id="videoElement" />
+		<video autoplay="true" id="videoElement" bind:this={video}/>
 	</div>
 	<canvas width="1280" height="720" bind:this={canvas} />
 </main>
