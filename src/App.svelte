@@ -7,6 +7,7 @@
 		let stream = null;
 		try {
 			stream = await navigator.mediaDevices.getUserMedia(constraints);
+
 			/* use the stream */
 		} catch (err) {
 			console.log("error in getting input stream: " + err.message);
@@ -19,12 +20,18 @@
 		stream = await getMedia({
 			video: true, // navigator.mediaDevices.getSupportedConstraints()
 		});
+		document.querySelector('video').srcObject = stream;
 	});
 
-	$: console.log(ctx);
+	console.log(ctx);
 </script>
 
 <main>
+	<div>
+		<video autoplay="true" id="videoElement">
+		
+		</video>
+	</div>
 	<canvas width="1280" height="720" bind:this={canvas} />
 </main>
 
@@ -32,4 +39,6 @@
 	@tailwind base;
 	@tailwind components;
 	@tailwind utilities;
+
+
 </style>
