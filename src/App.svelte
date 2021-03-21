@@ -132,7 +132,10 @@
     threeContainer.appendChild(canvas);
 
     stream = await getMedia({
-      video: true, // navigator.mediaDevices.getSupportedConstraints()
+      video: {
+        width: { ideal: 4096 },
+        height: { ideal: 2160 },
+      }, // navigator.mediaDevices.getSupportedConstraints()
     });
     let { width, height } = stream.getTracks()[0].getSettings();
 
