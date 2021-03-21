@@ -10,8 +10,8 @@
   let mesh;
   let camera;
   let poseNetModel, poses;
-  const VIDEO_WIDTH = 1280;
-  const VIDEO_HEIGHT = 720;
+  let VIDEO_WIDTH;
+  let VIDEO_HEIGHT;
   const minConfidence = 0.3;
 
   const loadModels = () => {
@@ -92,6 +92,7 @@
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
 
+
       /* use the stream */
     } catch (err) {
       console.log("error in getting input stream: " + err.message);
@@ -126,67 +127,89 @@
     ctx.stroke();
   }
 
-  function drawSkeleton(keypoints) {
-    const color = "#FFFFFF";
-    const adjacentKeyPoints = posenet.getAdjacentKeyPoints(
-      keypoints,
-      minConfidence
-    );
+//   function drawSkeleton(keypoints) {
+//     const color = "#FFFFFF";
+//     const adjacentKeyPoints = posenet.getAdjacentKeyPoints(
+//       keypoints,
+//       minConfidence
+//     );
 
-    adjacentKeyPoints.forEach((keypoint) => {
-      drawSegment(keypoint[0].position, keypoint[1].position, color, 1);
-    });
-  }
+//     adjacentKeyPoints.forEach((keypoint) => {
+//       drawSegment(keypoint[0].position, keypoint[1].position, color, 1);
+//     });
+//   }
 
   function drawPoint(y, x, r) {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = "#ff0000";
     ctx.fill();
   }
+  
+  
+  
+  
 
   onMount(async () => {
     ctx = canvas.getContext("2d");
     stream = await getMedia({
       video: true, // navigator.mediaDevices.getSupportedConstraints()
     });
+    let {width,height} = stream.getTracks()[0].getSettings();
+    
+    VIDEO_WIDTH =  width;
+    VIDEO_HEIGHT = height;
+
+    console.log(`${VIDEO_WIDTH} x ${VIDEO_HEIGHT}`);
     document.querySelector("video").srcObject = stream;
+
     if (!init()) {
+      
       poseNetModel = poseNet(video, modelLoaded);
       poseNetModel.on("pose", function (results) {
+        
         poses = results;
+        video.width = VIDEO_WIDTH;
+        video.height = VIDEO_HEIGHT;
         canvas.width = VIDEO_WIDTH;
         canvas.height = VIDEO_HEIGHT;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         ctx.save();
         ctx.restore();
       });
+      // let {CamWidth, CamHeight} = stream.getTracks()[0].getSettings();
+      // console.log(`${CamWidth}x${CamHeight}`);
+      
       loadModels();
       animate();
     }
+    
+    
   });
+  
 
   $: if (poses) {
     drawKeypoints();
     // drawSkeleton();
   }
+
+  
 </script>
 
 <main>
   <div id="container">
-    <canvas
-      id="canvas"
-      bind:this={canvas}
-      style="position:absolute;top:0;left:0;z-index:1;"
-    />
+    
     <video
       id="video"
       bind:this={video}
       autoplay
       muted="true"
       position="relative"
-      width="1280"
-      height="720"
+    />
+    <canvas
+      id="canvas"
+      bind:this={canvas}
+      style="position:absolute;top:0;left:0;z-index:100;"
     />
   </div>
 </main>
