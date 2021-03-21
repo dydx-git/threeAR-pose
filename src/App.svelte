@@ -6,10 +6,11 @@
   import { poseNet } from "ml5";
 
   let ctx, video, stream;
-  let stats, scene, renderer;
-  let mesh;
+  let stats, scene, renderer, raycaster;
+  let mesh, meshPosition;
   let camera;
   let poseNetModel, poses;
+  let nosePose;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
 
@@ -43,6 +44,9 @@
     stats.domElement.style.bottom = "0px";
     document.body.appendChild(stats.domElement);
 
+    raycaster = new THREE.Raycaster();
+    meshPosition = new THREE.Vector2();
+
     scene = new THREE.Scene();
 
     // put a camera in the scene
@@ -50,7 +54,7 @@
       35,
       window.innerWidth / window.innerHeight,
       1,
-      10000
+      100
     );
     camera.position.set(0, 0, 5);
     scene.add(camera);
@@ -63,7 +67,7 @@
   // animation loop
   function animate() {
     if (mesh) {
-      mesh.rotation.y += 0.01;
+      mesh.scale.set(2, 2, 2);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -104,6 +108,7 @@
     for (let i = 0; i < poses.length; i++) {
       // For each pose detected, loop through all the keypoints
       let pose = poses[i].pose;
+      nosePose = pose.nose;
       for (let j = 0; j < pose.keypoints.length; j++) {
         // A keypoint is an object describing a body part (like rightArm or leftShoulder)
         let keypoint = pose.keypoints[j];
@@ -163,8 +168,14 @@
     }
   });
 
-  $: if (poses) {
+  $: if (poses && mesh) {
     drawKeypoints();
+    meshPosition.x = (nosePose.x / window.innerWidth) * 2 - 1;
+    meshPosition.y = -((nosePose.y + 1000) / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(meshPosition, camera);
+    const dist = mesh.position.clone().sub(camera.position).length();
+    raycaster.ray.at(dist, mesh.position);
+    // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
 </script>
 
