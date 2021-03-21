@@ -5,14 +5,13 @@
   import Stats from "stats.js/build/stats.min.js";
   import { poseNet } from "ml5";
 
-  let canvas, ctx, video, stream;
+  let ctx, video, stream;
   let stats, scene, renderer;
   let mesh;
   let camera;
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
-  const minConfidence = 0.3;
 
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
@@ -32,12 +31,12 @@
 
   const init = () => {
     renderer = new THREE.WebGLRenderer({
-      antialias: true, // to get smoother output
+      antialias: false, // to get smoother output
       preserveDrawingBuffer: true, // to allow screenshot
+      alpha: true,
     });
-    renderer.setClearColor(0xbbbbbb, 1);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById("container").appendChild(renderer.domElement);
+    webglContainer.appendChild(renderer.domElement);
 
     stats = new Stats();
     stats.domElement.style.position = "absolute";
@@ -92,7 +91,6 @@
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-
       /* use the stream */
     } catch (err) {
       console.log("error in getting input stream: " + err.message);
@@ -118,56 +116,35 @@
     }
   }
 
-  function drawSegment(pair1, pair2, color, scale) {
-    ctx.beginPath();
-    ctx.moveTo(pair1.x * scale, pair1.y * scale);
-    ctx.lineTo(pair2.x * scale, pair2.y * scale);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = color;
-    ctx.stroke();
-  }
-
-//   function drawSkeleton(keypoints) {
-//     const color = "#FFFFFF";
-//     const adjacentKeyPoints = posenet.getAdjacentKeyPoints(
-//       keypoints,
-//       minConfidence
-//     );
-
-//     adjacentKeyPoints.forEach((keypoint) => {
-//       drawSegment(keypoint[0].position, keypoint[1].position, color, 1);
-//     });
-//   }
-
   function drawPoint(y, x, r) {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
     ctx.fillStyle = "#ff0000";
     ctx.fill();
   }
-  
-  
-  
-  
 
   onMount(async () => {
+    const canvas = document.createElement("CANVAS");
     ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.rect(100, 100, 150, 100);
+    ctx.stroke();
+    threeContainer.appendChild(canvas);
+
     stream = await getMedia({
       video: true, // navigator.mediaDevices.getSupportedConstraints()
     });
-    let {width,height} = stream.getTracks()[0].getSettings();
-    
-    VIDEO_WIDTH =  width;
+    let { width, height } = stream.getTracks()[0].getSettings();
+
+    VIDEO_WIDTH = width;
     VIDEO_HEIGHT = height;
 
     console.log(`${VIDEO_WIDTH} x ${VIDEO_HEIGHT}`);
     document.querySelector("video").srcObject = stream;
 
     if (!init()) {
-      
       poseNetModel = poseNet(video, modelLoaded);
       poseNetModel.on("pose", function (results) {
-        
         poses = results;
         video.width = VIDEO_WIDTH;
         video.height = VIDEO_HEIGHT;
@@ -177,40 +154,31 @@
         ctx.save();
         ctx.restore();
       });
-      // let {CamWidth, CamHeight} = stream.getTracks()[0].getSettings();
-      // console.log(`${CamWidth}x${CamHeight}`);
-      
+
       loadModels();
       animate();
     }
-    
-    
   });
-  
 
   $: if (poses) {
     drawKeypoints();
-    // drawSkeleton();
   }
-
-  
 </script>
 
 <main>
   <div id="container">
-    
-    <video
-      id="video"
-      bind:this={video}
-      autoplay
-      muted="true"
-      position="relative"
-    />
-    <canvas
-      id="canvas"
-      bind:this={canvas}
-      style="position:absolute;top:0;left:0;z-index:100;"
-    />
+    <div id="webglContainer" />
+    <div id="threeContainer" />
+    <div id="videoContainer">
+      <video
+        id="video"
+        bind:this={video}
+        autoplay
+        muted="true"
+        width={VIDEO_WIDTH}
+        height={VIDEO_HEIGHT}
+      />
+    </div>
   </div>
 </main>
 
@@ -218,4 +186,31 @@
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
+
+  /* make the canvases, children of the this container */
+  #container {
+    position: relative;
+  }
+
+  #webglContainer {
+    position: absolute;
+    pointer-events: none;
+    /* this element will not catch any events */
+    z-index: 8;
+    /* position this canvas at bottom of the other one */
+  }
+
+  #videoContainer {
+    position: absolute;
+    pointer-events: none;
+    /* this element will not catch any events */
+    z-index: 6;
+    /* position this canvas at bottom of the other one */
+  }
+
+  #threeContainer {
+    position: absolute;
+    z-index: 10;
+    /* position this canvas on top of the other one */
+  }
 </style>
