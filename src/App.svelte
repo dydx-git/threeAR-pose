@@ -10,7 +10,7 @@
   let mesh, meshPosition;
   let camera;
   let poseNetModel, poses;
-  let nosePose;
+  let nosePose, leftEarPose, rightEarPose, dominantLeft, dominantRight;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
 
@@ -109,6 +109,21 @@
       // For each pose detected, loop through all the keypoints
       let pose = poses[i].pose;
       nosePose = pose.nose;
+      leftEarPose = pose.leftEar;
+      rightEarPose = pose.rightEar;
+      // console.log("LEFT:  ",leftEarPose.x);
+      // console.log("RIGHT: ",rightEarPose.x);
+      dominantLeft = nosePose.x - leftEarPose.x;
+      dominantRight = rightEarPose.x - nosePose.x ;
+      if (dominantLeft > dominantRight) {
+        console.log("Head Rotate LEFT");
+      } else if (dominantRight > dominantLeft) {
+        console.log("Head Rotate RIGHT");
+      }
+
+
+      
+
       for (let j = 0; j < pose.keypoints.length; j++) {
         // A keypoint is an object describing a body part (like rightArm or leftShoulder)
         let keypoint = pose.keypoints[j];
@@ -151,7 +166,7 @@
     document.querySelector("video").srcObject = stream;
 
     if (!init()) {
-      poseNetModel = poseNet(video, modelLoaded);
+      poseNetModel = poseNet(video,'single', modelLoaded);
       poseNetModel.on("pose", function (results) {
         poses = results;
         video.width = VIDEO_WIDTH;
@@ -159,6 +174,8 @@
         canvas.width = VIDEO_WIDTH;
         canvas.height = VIDEO_HEIGHT;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+        ctx.translate(VIDEO_WIDTH, 0);
+        ctx.scale(-1, 1);
         ctx.save();
         ctx.restore();
       });
@@ -170,7 +187,9 @@
 
   $: if (poses && mesh) {
     drawKeypoints();
+    //console.log(meshPosition.x);
     meshPosition.x = (nosePose.x / window.innerWidth) * 2 - 1;
+    //console.log(meshPosition.x);
     meshPosition.y = -((nosePose.y + 1000) / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(meshPosition, camera);
     const dist = mesh.position.clone().sub(camera.position).length();
@@ -219,6 +238,8 @@
     pointer-events: none;
     /* this element will not catch any events */
     z-index: 6;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
     /* position this canvas at bottom of the other one */
   }
 
