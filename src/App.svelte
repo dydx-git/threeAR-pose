@@ -4,13 +4,14 @@
   import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
   import Stats from "stats.js/build/stats.min.js";
   import { poseNet } from "ml5";
+  import { drawPoint, drawKeypoints } from "./utils/2DDraw";
+  import { getPart, getFacePose } from "./utils/posenet";
 
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
   let mesh, meshPosition;
   let camera;
   let poseNetModel, poses;
-  let nosePose, leftEarPose, rightEarPose, dominantLeft, dominantRight;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
 
@@ -102,47 +103,6 @@
     return stream;
   }
 
-  // A function to draw ellipses over the detected keypoints
-  function drawKeypoints() {
-    // Loop through all the poses detected
-    for (let i = 0; i < poses.length; i++) {
-      // For each pose detected, loop through all the keypoints
-      let pose = poses[i].pose;
-      nosePose = pose.nose;
-      leftEarPose = pose.leftEar;
-      rightEarPose = pose.rightEar;
-      // console.log("LEFT:  ",leftEarPose.x);
-      // console.log("RIGHT: ",rightEarPose.x);
-      dominantLeft = nosePose.x - leftEarPose.x;
-      dominantRight = rightEarPose.x - nosePose.x ;
-      if (dominantLeft > dominantRight) {
-        console.log("Head Rotate LEFT");
-      } else if (dominantRight > dominantLeft) {
-        console.log("Head Rotate RIGHT");
-      }
-
-
-      
-
-      for (let j = 0; j < pose.keypoints.length; j++) {
-        // A keypoint is an object describing a body part (like rightArm or leftShoulder)
-        let keypoint = pose.keypoints[j];
-        // Only draw an ellipse is the pose probability is bigger than 0.2
-        if (keypoint.score > 0.2) {
-          const { y, x } = keypoint.position;
-          drawPoint(y - 2, x, 3);
-        }
-      }
-    }
-  }
-
-  function drawPoint(y, x, r) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = "#ff0000";
-    ctx.fill();
-  }
-
   onMount(async () => {
     const canvas = document.createElement("CANVAS");
     ctx = canvas.getContext("2d");
@@ -162,11 +122,10 @@
     VIDEO_WIDTH = width;
     VIDEO_HEIGHT = height;
 
-    console.log(`${VIDEO_WIDTH} x ${VIDEO_HEIGHT}`);
     document.querySelector("video").srcObject = stream;
 
     if (!init()) {
-      poseNetModel = poseNet(video,'single', modelLoaded);
+      poseNetModel = poseNet(video, "single", modelLoaded);
       poseNetModel.on("pose", function (results) {
         poses = results;
         video.width = VIDEO_WIDTH;
@@ -186,15 +145,16 @@
   });
 
   $: if (poses && mesh) {
-    drawKeypoints();
-    //console.log(meshPosition.x);
-    meshPosition.x = (nosePose.x / window.innerWidth) * 2 - 1;
-    //console.log(meshPosition.x);
-    meshPosition.y = -((nosePose.y + 1000) / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(meshPosition, camera);
-    const dist = mesh.position.clone().sub(camera.position).length();
-    raycaster.ray.at(dist, mesh.position);
-    // mesh.position.set(nosePose.x, nosePose.y, 40);
+    drawKeypoints(ctx, poses);
+    console.log(getFacePose(poses[0].pose));
+    // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
+    // meshPosition.x = (nosePose.x / window.innerWidth) * 2 - 1;
+    // //console.log(meshPosition.x);
+    // meshPosition.y = -((nosePose.y + 1000) / window.innerHeight) * 2 + 1;
+    // raycaster.setFromCamera(meshPosition, camera);
+    // const dist = mesh.position.clone().sub(camera.position).length();
+    // raycaster.ray.at(dist, mesh.position);
+    // // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
 </script>
 
