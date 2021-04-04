@@ -9,7 +9,7 @@
 
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
-  let mesh, meshPosition;
+  let mesh, meshPosition, pivot;
   let camera;
   let poseNetModel, poses;
   let VIDEO_WIDTH;
@@ -20,9 +20,23 @@
     gltfLoader.load(
       "/assets/models/mask.gltf",
       function (gltf) {
-        scene.add(gltf.scene);
+        //scene.add(gltf.scene);
         mesh = gltf.scene;
         mesh.position.y = -2;
+       scene.add(gltf.scene);
+
+        const box = new THREE.Box3().setFromObject(mesh);
+        box.center(mesh.position);
+        mesh.position.multiplyScalar(-1);
+
+        
+
+        pivot = new THREE.Group();
+        scene.add(pivot);
+        pivot.add(mesh);
+
+        const axesHelper = new THREE.AxesHelper(100);
+        scene.add(axesHelper);
       },
       undefined,
       function (error) {
@@ -52,10 +66,12 @@
 
     // put a camera in the scene
     camera = new THREE.PerspectiveCamera(
-      60,
+      //60,
+      35,
       window.innerWidth / window.innerHeight,
       1,
-      50
+      //50
+      10000
     );
     camera.position.set(0, 0, 5);
     scene.add(camera);
@@ -68,7 +84,8 @@
   // animation loop
   function animate() {
     if (mesh) {
-      mesh.scale.set(3, 3, 3);
+      pivot.rotation.y += 0.01;
+      //mesh.scale.set(3, 3, 3);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -134,7 +151,7 @@
         canvas.height = VIDEO_HEIGHT;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         ctx.translate(VIDEO_WIDTH, 0);
-        ctx.scale(-1, 1);
+        //ctx.scale(-1, 1);
         ctx.save();
         ctx.restore();
       });
@@ -151,7 +168,7 @@
     // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = (nose.position.x / window.innerWidth) * 2 - 1;
     //console.log(meshPosition.x);
-    meshPosition.y = -(nose.position.y / window.innerHeight) * 2 + 1;
+    meshPosition.y = -(nose.position.y / window.innerHeight) * 2 - 1;
     raycaster.setFromCamera(meshPosition, camera);
     const dist = mesh.position.clone().sub(camera.position).length();
     raycaster.ray.at(dist, mesh.position);
