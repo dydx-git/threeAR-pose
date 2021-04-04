@@ -52,10 +52,10 @@
 
     // put a camera in the scene
     camera = new THREE.PerspectiveCamera(
-      35,
+      60,
       window.innerWidth / window.innerHeight,
       1,
-      100
+      50
     );
     camera.position.set(0, 0, 5);
     scene.add(camera);
@@ -68,7 +68,7 @@
   // animation loop
   function animate() {
     if (mesh) {
-      mesh.scale.set(2, 2, 2);
+      mesh.scale.set(3, 3, 3);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -147,13 +147,14 @@
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
     console.log(getFacePose(poses[0].pose));
+    const nose = getPart("nose", poses[0].pose)[0];
     // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
-    // meshPosition.x = (nosePose.x / window.innerWidth) * 2 - 1;
-    // //console.log(meshPosition.x);
-    // meshPosition.y = -((nosePose.y + 1000) / window.innerHeight) * 2 + 1;
-    // raycaster.setFromCamera(meshPosition, camera);
-    // const dist = mesh.position.clone().sub(camera.position).length();
-    // raycaster.ray.at(dist, mesh.position);
+    meshPosition.x = (nose.position.x / window.innerWidth) * 2 - 1;
+    //console.log(meshPosition.x);
+    meshPosition.y = -(nose.position.y / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(meshPosition, camera);
+    const dist = mesh.position.clone().sub(camera.position).length();
+    raycaster.ray.at(dist, mesh.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
 </script>
