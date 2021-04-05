@@ -51,7 +51,7 @@
       preserveDrawingBuffer: true, // to allow screenshot
       alpha: true,
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(VIDEO_WIDTH, VIDEO_HEIGHT);
     webglContainer.appendChild(renderer.domElement);
 
     stats = new Stats();
@@ -85,7 +85,7 @@
   function animate() {
     if (mesh) {
       // pivot.rotation.y += 0.01;
-      // mesh.scale.set(2, 2, 2);
+      mesh.scale.set(1, 1, 1);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -151,7 +151,7 @@
         canvas.height = VIDEO_HEIGHT;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         ctx.translate(VIDEO_WIDTH, 0);
-        //ctx.scale(-1, 1);
+        ctx.scale(-1, 1);
         ctx.save();
         ctx.restore();
       });
