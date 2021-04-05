@@ -68,7 +68,7 @@
     camera = new THREE.PerspectiveCamera(
       //60,
       35,
-      window.innerWidth / window.innerHeight,
+      VIDEO_WIDTH / VIDEO_HEIGHT,
       1,
       //50
       10000
@@ -84,8 +84,8 @@
   // animation loop
   function animate() {
     if (mesh) {
-      pivot.rotation.y += 0.01;
-      //mesh.scale.set(3, 3, 3);
+      // pivot.rotation.y += 0.01;
+      // mesh.scale.set(2, 2, 2);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -166,9 +166,9 @@
     console.log(getFacePose(poses[0].pose));
     const nose = getPart("nose", poses[0].pose)[0];
     // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
-    meshPosition.x = (nose.position.x / window.innerWidth) * 2 - 1;
+    meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
-    meshPosition.y = -(nose.position.y / window.innerHeight) * 2 - 1;
+    meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 - 1;
     raycaster.setFromCamera(meshPosition, camera);
     const dist = mesh.position.clone().sub(camera.position).length();
     raycaster.ray.at(dist, mesh.position);
