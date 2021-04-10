@@ -1,5 +1,3 @@
-import { MaxEquation } from "three";
-
 export function getPart(partname, pose) {
   return pose["keypoints"].filter(function (partpoint) {
     if (partpoint.part == partname) return true;

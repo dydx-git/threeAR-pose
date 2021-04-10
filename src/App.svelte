@@ -23,13 +23,11 @@
         //scene.add(gltf.scene);
         mesh = gltf.scene;
         mesh.position.y = -2;
-       scene.add(gltf.scene);
+        scene.add(gltf.scene);
 
         const box = new THREE.Box3().setFromObject(mesh);
         box.center(mesh.position);
         mesh.position.multiplyScalar(-1);
-
-        
 
         pivot = new THREE.Group();
         scene.add(pivot);
@@ -73,7 +71,7 @@
       //50
       10000
     );
-    camera.position.set(0, 0, 5);
+    camera.position.set(0, 1.5, 4);
     scene.add(camera);
   };
 
@@ -83,8 +81,19 @@
 
   // animation loop
   function animate() {
-    if (mesh) {
+    if (mesh && pivot && poses) {
+      const { yaw, pitch } = getFacePose(poses[0].pose);
+      console.log("Pitch ", pitch);
+      let normalizedAngle = (yaw - 95) * (Math.PI / 180);
+      let normalizedPitch = (pitch - 100) * (Math.PI / 180);
+      // console.log(angle);
+      if (normalizedAngle) {
+        pivot.rotation.y = normalizedAngle;
+        pivot.rotation.x = -normalizedPitch;
+      }
       // pivot.rotation.y += 0.01;
+      // pivot.rotation.set(0, angle, 0);
+      //mesh.rotation.y += 0.01;
       mesh.scale.set(1, 1, 1);
     }
     // loop on request animation loop
@@ -163,14 +172,17 @@
 
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
-    console.log(getFacePose(poses[0].pose));
+
     const nose = getPart("nose", poses[0].pose)[0];
+
+    // console.log("Pitch", pitch);
     // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
     meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 - 1;
     raycaster.setFromCamera(meshPosition, camera);
     const dist = mesh.position.clone().sub(camera.position).length();
+    // console.log(dist);
     raycaster.ray.at(dist, mesh.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
