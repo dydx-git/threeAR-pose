@@ -62,16 +62,17 @@
 
     scene = new THREE.Scene();
 
+    // const size = 1;
+    // const near = 5;
+    // const far = 50;
+
     // put a camera in the scene
-    camera = new THREE.PerspectiveCamera(
-      //60,
-      35,
-      VIDEO_WIDTH / VIDEO_HEIGHT,
-      1,
-      //50
-      10000
+    camera = new THREE.OrthographicCamera(
+      -1,1,1,-1,1,1000
     );
-    camera.position.set(0, 1.5, 4);
+    
+    camera.zoom = 0.2;
+    camera.position.set(0, 1, 5);
     scene.add(camera);
   };
 
@@ -83,13 +84,12 @@
   function animate() {
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
-      console.log("Pitch ", pitch);
-      let normalizedAngle = (yaw - 95) * (Math.PI / 180);
+      // console.log("Pitch ", pitch);
+      let normalizedAngle = (yaw - 90) * (Math.PI / 180);
       let normalizedPitch = (pitch - 100) * (Math.PI / 180);
-      // console.log(angle);
       if (normalizedAngle) {
-        pivot.rotation.y = normalizedAngle;
-        pivot.rotation.x = -normalizedPitch;
+        // camera.rotation.y = normalizedAngle;
+        // mesh.position.x = normalizedPitch;
       }
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
