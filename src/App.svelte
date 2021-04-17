@@ -30,6 +30,10 @@
         pivot = new THREE.Group();
         scene.add(pivot);
         pivot.add(mesh);
+        /*      IMPORTANT
+        use the pivot to scale, rotate and position
+        the 3D object. DO NOT USE mesh.
+        */
 
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
@@ -97,7 +101,7 @@
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
-      // mesh.scale.set(2, 2, 2);
+      pivot.scale.set(2, 2, 2);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
