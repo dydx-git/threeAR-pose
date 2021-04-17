@@ -22,8 +22,6 @@
       function (gltf) {
         //scene.add(gltf.scene);
         mesh = gltf.scene;
-        mesh.position.y = -2;
-        scene.add(gltf.scene);
 
         const box = new THREE.Box3().setFromObject(mesh);
         box.center(mesh.position);
@@ -68,11 +66,16 @@
 
     // put a camera in the scene
     camera = new THREE.OrthographicCamera(
-      -1,1,1,-1,1,1000
+      -VIDEO_WIDTH / 200,
+      VIDEO_WIDTH / 200,
+      VIDEO_HEIGHT / 200,
+      -VIDEO_HEIGHT / 200,
+      0.1,
+      1000
     );
-    
     camera.zoom = 0.2;
-    camera.position.set(0, 1, 5);
+    camera.position.set(0, 0, 5);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
     scene.add(camera);
   };
 
@@ -85,16 +88,16 @@
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
       // console.log("Pitch ", pitch);
-      let normalizedAngle = (yaw - 90) * (Math.PI / 180);
+      let normalizedAngle = (yaw - 95) * (Math.PI / 180);
       let normalizedPitch = (pitch - 100) * (Math.PI / 180);
       if (normalizedAngle) {
-        // camera.rotation.y = normalizedAngle;
-        // mesh.position.x = normalizedPitch;
+        pivot.rotation.y = normalizedAngle;
+        pivot.rotation.x = -normalizedPitch;
       }
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
-      mesh.scale.set(1, 1, 1);
+      // mesh.scale.set(2, 2, 2);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -175,15 +178,14 @@
 
     const nose = getPart("nose", poses[0].pose)[0];
 
-    // console.log("Pitch", pitch);
-    // drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
+    //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
-    meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 - 1;
+    meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
     raycaster.setFromCamera(meshPosition, camera);
-    const dist = mesh.position.clone().sub(camera.position).length();
+    const dist = pivot.position.clone().sub(camera.position).length();
     // console.log(dist);
-    raycaster.ray.at(dist, mesh.position);
+    raycaster.ray.at(dist, pivot.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
 </script>
