@@ -6,7 +6,6 @@
   import { poseNet } from "ml5";
   import { drawPoint, drawKeypoints } from "./utils/2DDraw";
   import { getPart, getFacePose } from "./utils/posenet";
-
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
   let mesh, meshPosition, pivot;
@@ -14,11 +13,13 @@
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
-
+  let model = "glasses"; // Change it to mask to use mask.
+ // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
-      "/assets/models/mask.gltf",
+      //"/assets/models/mask.gltf",
+      "/assets/models/glasses/scene.gltf",
       function (gltf) {
         //scene.add(gltf.scene);
         mesh = gltf.scene;
@@ -34,6 +35,9 @@
         use the pivot to scale, rotate and position
         the 3D object. DO NOT USE mesh.
         */
+        //console.log(pivot.position);
+
+       
 
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
@@ -86,7 +90,7 @@
   function modelLoaded() {
     console.log("Model Loaded!");
   }
-
+  //let controls = new THREE.OrbitControls(camera, renderer.domElement);
   // animation loop
   function animate() {
     if (mesh && pivot && poses) {
@@ -97,6 +101,13 @@
       if (normalizedAngle) {
         pivot.rotation.y = normalizedAngle;
         pivot.rotation.x = -normalizedPitch;
+      }
+      if (model == "glasses") {
+        pivot.position.set(meshPosition.x+1,meshPosition.y+0.5,0);
+        console.log(pivot.position); 
+
+
+
       }
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
@@ -179,13 +190,14 @@
 
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
-
+x
     const nose = getPart("nose", poses[0].pose)[0];
 
     //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
-    //console.log(meshPosition.x);
+    console.log(meshPosition.x);
     meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
+    console.log(meshPosition.y);
     raycaster.setFromCamera(meshPosition, camera);
     const dist = pivot.position.clone().sub(camera.position).length();
     // console.log(dist);
