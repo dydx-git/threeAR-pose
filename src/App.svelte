@@ -25,9 +25,8 @@
         mesh = gltf.scene;
 
         const box = new THREE.Box3().setFromObject(mesh);
-        box.center(mesh.position);
+        box.getCenter(mesh.position);
         mesh.position.multiplyScalar(-1);
-
         pivot = new THREE.Group();
         scene.add(pivot);
         pivot.add(mesh);
@@ -35,9 +34,6 @@
         use the pivot to scale, rotate and position
         the 3D object. DO NOT USE mesh.
         */
-        //console.log(pivot.position);
-
-       
 
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
@@ -103,8 +99,8 @@
         pivot.rotation.x = -normalizedPitch;
       }
       if (model == "glasses") {
-        pivot.position.set(meshPosition.x+1,meshPosition.y+0.5,0);
-        console.log(pivot.position); 
+        mesh.position.set(meshPosition.x,meshPosition.y,0);
+        console.log(mesh.position.x); 
 
 
 
@@ -132,6 +128,7 @@
     // cameraControls.update();
 
     // actually render the scene
+    
     renderer.render(scene, camera);
   }
 
@@ -190,14 +187,11 @@
 
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
-x
     const nose = getPart("nose", poses[0].pose)[0];
-
     //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
-    console.log(meshPosition.x);
+    //console.log(meshPosition.x);
     meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
-    console.log(meshPosition.y);
     raycaster.setFromCamera(meshPosition, camera);
     const dist = pivot.position.clone().sub(camera.position).length();
     // console.log(dist);
