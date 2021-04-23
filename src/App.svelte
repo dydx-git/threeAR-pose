@@ -8,7 +8,7 @@
   import { getPart, getFacePose } from "./utils/posenet";
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
-  let mesh, meshPosition, pivot;
+  let mesh, meshPosition, pivot, eyesPosition;
   let camera;
   let poseNetModel, poses;
   let VIDEO_WIDTH;
@@ -23,7 +23,7 @@
       function (gltf) {
         //scene.add(gltf.scene);
         mesh = gltf.scene;
-
+        //const texture = new THREE.TextureLoader().load( "/assets/models/glasses/textures/Handles_baseColor.jpeg");
         const box = new THREE.Box3().setFromObject(mesh);
         box.getCenter(mesh.position);
         mesh.position.multiplyScalar(-1);
@@ -61,7 +61,7 @@
 
     raycaster = new THREE.Raycaster();
     meshPosition = new THREE.Vector2();
-
+    eyesPosition = new THREE.Vector2(); // For glasses purposes
     scene = new THREE.Scene();
 
     // const size = 1;
@@ -92,18 +92,15 @@
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
       // console.log("Pitch ", pitch);
-      let normalizedAngle = (yaw - 95) * (Math.PI / 180);
+      let normalizedYaw = (yaw - 95) * (Math.PI / 180);
       let normalizedPitch = (pitch - 100) * (Math.PI / 180);
-      if (normalizedAngle) {
-        pivot.rotation.y = normalizedAngle;
-        pivot.rotation.x = -normalizedPitch;
+      if (normalizedYaw) {
+        pivot.rotation.y = normalizedYaw; // Left Right
+        pivot.rotation.x = -normalizedPitch; // Up down
       }
       if (model == "glasses") {
-        mesh.position.set(meshPosition.x,meshPosition.y,0);
-        console.log(mesh.position.x); 
-
-
-
+        mesh.position.set(eyesPosition.x,eyesPosition.y,0);
+        console.log("Eyes position: "+ eyesPosition.x); 
       }
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
@@ -188,6 +185,7 @@
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
     const nose = getPart("nose", poses[0].pose)[0];
+    //console.log(leftEye);
     //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
@@ -197,6 +195,18 @@
     // console.log(dist);
     raycaster.ray.at(dist, pivot.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
+
+
+    // For Glasses model 
+    const leftEye = getPart("leftEye", poses[0].pose)[0];
+    const rightEye = getPart("rightEye", poses[0].pose)[0];
+    eyesPosition.x = ((-((leftEye.position.x / VIDEO_WIDTH) * 2 - 1))+(-((rightEye.position.x / VIDEO_WIDTH) * 2 - 1)))/2;
+    //console.log(meshPosition.x);
+    eyesPosition.y = ((-((leftEye.position.y / VIDEO_HEIGHT) * 2 - 1))+(-((rightEye.position.y / VIDEO_HEIGHT) * 2 - 1)))/2;
+    raycaster.setFromCamera(eyesPosition, camera);
+    const distEye = pivot.position.clone().sub(camera.position).length();
+    // console.log(distEye);
+    raycaster.ray.at(distEye, pivot.position);
   }
 </script>
 
