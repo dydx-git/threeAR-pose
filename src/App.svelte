@@ -14,6 +14,8 @@
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
   let model = "glasses"; // Change it to mask to use mask.
+  let scale = 1;
+  let pitchFactor = 75;
  // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
@@ -92,20 +94,16 @@
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
       // console.log("Pitch ", pitch);
-      let normalizedYaw = (yaw - 95) * (Math.PI / 180);
-      let normalizedPitch = (pitch - 100) * (Math.PI / 180);
+      let normalizedYaw = (yaw - 90) * (Math.PI / 180);
+      let normalizedPitch = (pitch - pitchFactor) * (Math.PI / 180);
       if (normalizedYaw) {
         pivot.rotation.y = normalizedYaw; // Left Right
         pivot.rotation.x = -normalizedPitch; // Up down
       }
-      if (model == "glasses") {
-        mesh.position.set(eyesPosition.x,eyesPosition.y,0);
-        console.log("Eyes position: "+ eyesPosition.x); 
-      }
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
-      pivot.scale.set(2, 2, 2);
+      pivot.scale.set(scale, scale, scale);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -208,7 +206,32 @@
     // console.log(distEye);
     raycaster.ray.at(distEye, pivot.position);
   }
+
+  const handleKeydown = e => {
+    switch (e.keyCode) {
+      case 38:
+        scale += 0.01;
+        // pitchFactor += 1;
+        break;
+
+      case 40:
+        scale -= 0.01;
+        // pitchFactor -= 1;
+        break;
+      
+      case 67:
+        // console.log(pitchFactor);
+        console.log(scale);
+    
+      default:
+        break;
+    }
+    if(e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)
+      console.log("Arrow key pressed: " + e.keyCode);
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown}/>
 
 <main>
   <div id="container">
