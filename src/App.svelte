@@ -13,15 +13,18 @@
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
-  let model = "glasses"; // Change it to mask to use mask.
-  let scale = 1;
+  //let model = "glasses"; // Change it to mask to use mask.
+  let scale = 2;
   let pitchFactor = 75;
+  const PATH = '/assets/models/';
+  const models = ['mask.gltf','glasses/scene.gltf','glasses1/scene.gltf'];
  // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
-      //"/assets/models/mask.gltf",
-      "/assets/models/glasses/scene.gltf",
+      PATH + models[1],
+      // "https://s3-us-west-2.amazonaws.com/s.cdpn.io/39255/ladybug.gltf",
+      //"/assets/models/glasses (1)/scene.gltf",
       function (gltf) {
         //scene.add(gltf.scene);
         mesh = gltf.scene;
@@ -83,6 +86,14 @@
     camera.position.set(0, 0, 5);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     scene.add(camera);
+
+    var light = new THREE.PointLight( 0xffffcc, 10, 200 );
+    light.position.set( 4, 30, -20 );
+    scene.add( light );
+
+    var light2 = new THREE.AmbientLight( 0x20202A, 20, 100 );
+    light2.position.set( 30, -10, 30 );
+    scene.add( light2 );
   };
 
   function modelLoaded() {
