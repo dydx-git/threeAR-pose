@@ -21,6 +21,24 @@ export function getFacePose(pose) {
   };
 }
 
+export function getBodyPose(pose) {
+  const nose = getPart("nose", pose)[0];
+  const leftShoulder = getPart("leftShoulder", pose)[0];
+  const rightShoulder = getPart("rightShoulder", pose)[0];
+  const leftEar = getPart("leftEar", pose)[0];
+  const rightEar = getPart("rightEar", pose)[0];
+
+  
+  const _yaw = Math.atan2(
+    2 * nose.position.x - leftShoulder.position.x - rightShoulder.position.x,
+    leftShoulder.position.x - rightShoulder.position.x
+  );
+  return {
+    yaw: getYaw(_yaw),
+    pitch: getPitch(_yaw, nose.position, leftEar.position, rightEar.position),
+  };
+}
+
 function getYaw(yaw) {
   return (yaw * -180) / Math.PI + 90;
 }

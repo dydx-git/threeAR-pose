@@ -5,7 +5,7 @@
   import Stats from "stats.js/build/stats.min.js";
   import { poseNet } from "ml5";
   import { drawPoint, drawKeypoints } from "./utils/2DDraw";
-  import { getPart, getFacePose } from "./utils/posenet";
+  import { getPart, getFacePose, getBodyPose } from "./utils/posenet";
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
   let mesh, meshPosition, pivot, eyesPosition;
@@ -92,8 +92,10 @@
   // animation loop
   function animate() {
     if (mesh && pivot && poses) {
-      const { yaw, pitch } = getFacePose(poses[0].pose);
+      // const { yaw, pitch } = getFacePose(poses[0].pose);
+      const { yaw, pitch } = getBodyPose(poses[0].pose);
       // console.log("Pitch ", pitch);
+      console.log("Yaw ", yaw);
       let normalizedYaw = (yaw - 90) * (Math.PI / 180);
       let normalizedPitch = (pitch - pitchFactor) * (Math.PI / 180);
       if (normalizedYaw) {
