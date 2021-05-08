@@ -16,9 +16,10 @@
   //let model = "glasses"; // Change it to mask to use mask.
   let scale = 2;
   let pitchFactor = 75;
-  const PATH = '/assets/models/';
-  const models = ['mask.gltf','glasses/scene.gltf','glasses1/scene.gltf'];
- // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
+  let farPlaneFactor = 5;
+  const PATH = "/assets/models/";
+  const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
+  // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
@@ -80,20 +81,19 @@
       VIDEO_HEIGHT / 200,
       -VIDEO_HEIGHT / 200,
       0.1,
-      1000
+      farPlaneFactor
     );
     camera.zoom = 0.2;
     camera.position.set(0, 0, 5);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
     scene.add(camera);
 
-    var light = new THREE.PointLight( 0xffffcc, 10, 200 );
-    light.position.set( 4, 30, -20 );
-    scene.add( light );
+    var light = new THREE.PointLight(0xffffcc, 10, 200);
+    light.position.set(4, 30, -20);
+    scene.add(light);
 
-    var light2 = new THREE.AmbientLight( 0x20202A, 20, 100 );
-    light2.position.set( 30, -10, 30 );
-    scene.add( light2 );
+    var light2 = new THREE.AmbientLight(0x20202a, 20, 100);
+    light2.position.set(30, -10, 30);
+    scene.add(light2);
   };
 
   function modelLoaded() {
@@ -111,6 +111,7 @@
         pivot.rotation.y = normalizedYaw; // Left Right
         pivot.rotation.x = -normalizedPitch; // Up down
       }
+      pivot.position.z = 1;
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
@@ -134,7 +135,7 @@
     // cameraControls.update();
 
     // actually render the scene
-    
+
     renderer.render(scene, camera);
   }
 
@@ -205,44 +206,65 @@
     raycaster.ray.at(dist, pivot.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
 
-
-    // For Glasses model 
+    // For Glasses model
     const leftEye = getPart("leftEye", poses[0].pose)[0];
     const rightEye = getPart("rightEye", poses[0].pose)[0];
-    eyesPosition.x = ((-((leftEye.position.x / VIDEO_WIDTH) * 2 - 1))+(-((rightEye.position.x / VIDEO_WIDTH) * 2 - 1)))/2;
+    eyesPosition.x =
+      (-((leftEye.position.x / VIDEO_WIDTH) * 2 - 1) +
+        -((rightEye.position.x / VIDEO_WIDTH) * 2 - 1)) /
+      2;
     //console.log(meshPosition.x);
-    eyesPosition.y = ((-((leftEye.position.y / VIDEO_HEIGHT) * 2 - 1))+(-((rightEye.position.y / VIDEO_HEIGHT) * 2 - 1)))/2;
+    eyesPosition.y =
+      (-((leftEye.position.y / VIDEO_HEIGHT) * 2 - 1) +
+        -((rightEye.position.y / VIDEO_HEIGHT) * 2 - 1)) /
+      2;
     raycaster.setFromCamera(eyesPosition, camera);
     const distEye = pivot.position.clone().sub(camera.position).length();
     // console.log(distEye);
     raycaster.ray.at(distEye, pivot.position);
   }
 
-  const handleKeydown = e => {
+  const handleKeydown = (e) => {
     switch (e.keyCode) {
       case 38:
         scale += 0.01;
-        // pitchFactor += 1;
         break;
 
       case 40:
         scale -= 0.01;
-        // pitchFactor -= 1;
         break;
-      
+
+      // case 73:
+      //   // scale -= 0.01;
+      //   // pivot.position.z -= 0.01;
+      //   // pitchFactor -= 1;
+      //   init();
+      //   loadModels();
+      //   animate();
+      //   console.log(`camera initalized with ${farPlaneFactor}`);
+      //   break;
+
       case 67:
         // console.log(pitchFactor);
-        console.log(scale);
-    
+        console.log(`farPlaneVector: ${farPlaneFactor}`);
+        console.log(`scale: ${scale}`);
+        console.log(`z position: ${pivot.position.z}`);
+        console.log(`mesh: ${mesh}`);
+
       default:
         break;
     }
-    if(e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)
+    if (
+      e.keyCode == 37 ||
+      e.keyCode == 38 ||
+      e.keyCode == 39 ||
+      e.keyCode == 40
+    )
       console.log("Arrow key pressed: " + e.keyCode);
-  }
+  };
 </script>
 
-<svelte:window on:keydown={handleKeydown}/>
+<svelte:window on:keydown={handleKeydown} />
 
 <main>
   <div id="container">
