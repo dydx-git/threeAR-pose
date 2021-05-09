@@ -5,6 +5,10 @@
   import Stats from "stats.js/build/stats.min.js";
   import { poseNet } from "ml5";
   import { drawPoint, drawKeypoints } from "./utils/2DDraw";
+  import {
+    computeScreenSpaceBoundingBox,
+    normalizedToPixels,
+  } from "./utils/three";
   import { getPart, getFacePose } from "./utils/posenet";
   let ctx, video, stream;
   let stats, scene, renderer, raycaster;
@@ -13,10 +17,14 @@
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
+  let cube;
   //let model = "glasses"; // Change it to mask to use mask.
   let scale = 2;
   let pitchFactor = 75;
   let farPlaneFactor = 5;
+
+  let boundingBox2D;
+
   const PATH = "/assets/models/";
   const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
   // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
@@ -94,6 +102,11 @@
     var light2 = new THREE.AmbientLight(0x20202a, 20, 100);
     light2.position.set(30, -10, 30);
     scene.add(light2);
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+    cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
   };
 
   function modelLoaded() {
@@ -116,6 +129,22 @@
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
       pivot.scale.set(scale, scale, scale);
+
+      boundingBox2D = computeScreenSpaceBoundingBox(THREE, mesh, camera);
+      const xCo = ((boundingBox2D.min.x + 1) * VIDEO_WIDTH) / 2;
+      const yCo = ((1 - boundingBox2D.max.y) * VIDEO_HEIGHT) / 2;
+      const wDm =
+        ((boundingBox2D.max.x - boundingBox2D.min.x) * VIDEO_WIDTH) / 2;
+      const hDm =
+        ((boundingBox2D.max.y - boundingBox2D.min.y) * VIDEO_HEIGHT) / 2;
+
+      console.log(`modelBoundingBox = {x: ${xCo}, y: ${yCo}}`);
+      ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+      ctx.strokeRect(xCo, yCo, wDm, hDm);
+
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+      cube.position.x += 0.01;
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -180,9 +209,9 @@
         video.height = VIDEO_HEIGHT;
         canvas.width = VIDEO_WIDTH;
         canvas.height = VIDEO_HEIGHT;
-        ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
-        ctx.translate(VIDEO_WIDTH, 0);
-        ctx.scale(-1, 1);
+        // ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+        // ctx.translate(VIDEO_WIDTH, 0);
+        // ctx.scale(-1, 1);
         ctx.save();
         ctx.restore();
       });
@@ -195,7 +224,7 @@
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
     const nose = getPart("nose", poses[0].pose)[0];
-    //console.log(leftEye);
+    console.log(nose.position);
     //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
     meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
@@ -221,7 +250,7 @@
     raycaster.setFromCamera(eyesPosition, camera);
     const distEye = pivot.position.clone().sub(camera.position).length();
     // console.log(distEye);
-    raycaster.ray.at(distEye, pivot.position);
+    const translatedPoints = raycaster.ray.at(distEye, pivot.position);
   }
 
   const handleKeydown = (e) => {
