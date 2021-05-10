@@ -14,14 +14,43 @@
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
+  let x1, x2, y1, y2;
+  let alien;
+  let left_shoulder, right_shoulder;
 
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
-      "/assets/models/mask.gltf",
+      //"/assets/models/mask.gltf",
+      //"/assets/models/Metarig-Shirt.gltf",
+      "/assets/models/alienSuit.gltf",
       function (gltf) {
         //scene.add(gltf.scene);
+        alien = gltf;
+        console.log(alien);
         mesh = gltf.scene;
+        //let fileAnimations = gltf.animations;
+
+        mesh.traverse(o => {
+
+          if (o.isBone) {
+            console.log(o.name);
+          }
+          
+          // Reference the shoulder and elbow
+          
+          if (o.isBone && o.name === 'mixamorigRightShoulder') {
+            right_shoulder = o;
+          }
+          
+          if (o.isBone && o.name === 'mixamorigLeftShoulder') {
+            left_shoulder = o;
+          }
+          console.log(o);
+
+        });
+
+
 
         const box = new THREE.Box3().setFromObject(mesh);
         box.center(mesh.position);
@@ -53,6 +82,7 @@
     });
     renderer.setSize(VIDEO_WIDTH, VIDEO_HEIGHT);
     webglContainer.appendChild(renderer.domElement);
+
 
     stats = new Stats();
     stats.domElement.style.position = "absolute";
@@ -90,7 +120,7 @@
   // animation loop
   function animate() {
     if (mesh && pivot && poses) {
-      const { yaw, pitch } = getFacePose(poses[0].pose);
+      const { yaw, pitch } = getPart("rightShoulder", poses[0].pose)[0];
       // console.log("Pitch ", pitch);
       let normalizedAngle = (yaw - 95) * (Math.PI / 180);
       let normalizedPitch = (pitch - 100) * (Math.PI / 180);
@@ -101,7 +131,8 @@
       // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
-      pivot.scale.set(2, 2, 2);
+      //pivot.scale.set(2, 2, 2)
+      pivot.scale.set(3, 3, 3);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -180,18 +211,105 @@
   $: if (poses && mesh) {
     drawKeypoints(ctx, poses);
 
-    const nose = getPart("nose", poses[0].pose)[0];
+
+    //const boneLinks = [];
+    const boneLinkMap = {
+      //'shoulder.R' 
+      'mixamorig:RightShoulder' : getPart("rightShoulder", poses[0].pose)[0],
+      //'shoulder.L'
+      'mixamorig:LeftShoulder' : getPart("leftShoulder", poses[0].pose)[0],
+      //'forearm.R' : getPart("rightElbow", poses[0].pose)[0],
+      //'forearm.L' : getPart("leftElbow", poses[0].pose)[0],
+    };
+
+    //const nose = getPart("nose", poses[0].pose)[0];
 
     //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
-    meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
+    //meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
     //console.log(meshPosition.x);
-    meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
+   // meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
+    const leftShoulder = getPart("leftShoulder", poses[0].pose)[0];
+    const rightShoulder = getPart("rightShoulder", poses[0].pose)[0];
+    x1 = -((leftShoulder.position.x / VIDEO_WIDTH) * 2 - 1);
+    x2 = -((rightShoulder.position.x / VIDEO_WIDTH) * 2 - 1);
+    meshPosition.x = (x1 + x2) / 2 ;
+    console.log(leftShoulder);
+    y1 = -((leftShoulder.position.y / VIDEO_HEIGHT) * 2 );
+    y2 =-((rightShoulder.position.y / VIDEO_HEIGHT) * 2 );
+    meshPosition.y = (y1 + y2) / 2;
+
+  
+
     raycaster.setFromCamera(meshPosition, camera);
     const dist = pivot.position.clone().sub(camera.position).length();
     // console.log(dist);
     raycaster.ray.at(dist, pivot.position);
     // // mesh.position.set(nosePose.x, nosePose.y, 40);
   }
+  
+  document.addEventListener('positionmove', function(){
+  var rightShoulderCords = rightShoulder.position;
+  var leftShoulderCords = leftShoulder.position;
+
+  if (right_shoulder && left_shoulder) {
+    moveJoint(rightShoulderCords, right_shoulder, 150);
+    moveJoint(leftShoulderCords, left_shoulder, 150);
+  }
+});
+
+function moveJoint(posenetPart, joint, degreeLimit) {
+    let degrees = getMovementDegrees(posenetPart.x, posenetPart.y, degreeLimit);
+    joint.rotation.y = THREE.Math.degToRad(degrees.x);
+    joint.rotation.x = THREE.Math.degToRad(degrees.y);
+    console.log(joint.rotation.x);
+  }
+
+  function getMovementDegrees(x, y, degreeLimit) {
+    let dx = 0,
+    dy = 0,
+    xdiff,
+    xPercentage,
+    ydiff,
+    yPercentage;
+
+    let w = { x: VIDEO_WIDTH, y: VIDEO_HEIGHT };
+
+    // Left (Rotates shoulder left between 0 and -degreeLimit)
+    // 1. If posenet part is in the left half of screen
+    if (x <= w.x / 2) {
+      // 2. Get the difference between middle of screen and posenet part position
+      xdiff = w.x / 2 - x;
+      // 3. Find the percentage of that difference (percentage toward edge of screen)
+      xPercentage = xdiff / (w.x / 2) * 100;
+      // 4. Convert that to a percentage of the maximum rotation we allow for the posenet part
+      dx = degreeLimit * xPercentage / 100 * -1;
+    }
+
+    // Right (Rotates shoulder right between 0 and degreeLimit)
+    if (x >= w.x / 2) {
+      xdiff = x - w.x / 2;
+      xPercentage = xdiff / (w.x / 2) * 100;
+      dx = degreeLimit * xPercentage / 100;
+    }
+    // Up (Rotates shoulder up between 0 and -degreeLimit)
+    if (y <= w.y / 2) {
+      ydiff = w.y / 2 - y;
+      yPercentage = ydiff / (w.y / 2) * 100;
+      // Note that I cut degreeLimit in half when model moves shoulder up
+      dy = degreeLimit * 0.5 * yPercentage / 100 * -1;
+    }
+    // Down (Rotates shoulder down between 0 and degreeLimit)
+    if (y >= w.y / 2) {
+      ydiff = y - w.y / 2;
+      yPercentage = ydiff / (w.y / 2) * 100;
+      dy = degreeLimit * yPercentage / 100;
+    }
+    return { x: dx, y: dy };
+  };
+
+
+
+
 </script>
 
 <main>
