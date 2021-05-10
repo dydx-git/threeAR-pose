@@ -18,6 +18,13 @@
   let pitchFactor = 75;
   const PATH = '/assets/models/';
   const models = ['mask.gltf','glasses/scene.gltf','glasses1/scene.gltf'];
+
+  let boxHelper;
+  let boundingBox;
+  let helper;
+
+  let x = 0;
+  let y = 0;
  // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
@@ -28,17 +35,33 @@
       function (gltf) {
         //scene.add(gltf.scene);
         mesh = gltf.scene;
-        //const texture = new THREE.TextureLoader().load( "/assets/models/glasses/textures/Handles_baseColor.jpeg");
-        const box = new THREE.Box3().setFromObject(mesh);
-        box.getCenter(mesh.position);
+       
+        //const box = new THREE.Box3().setFromObject(mesh);
+        //box.getCenter(mesh.position);
         mesh.position.multiplyScalar(-1);
         pivot = new THREE.Group();
-        scene.add(pivot);
         pivot.add(mesh);
+        scene.add(pivot);
         /*      IMPORTANT
         use the pivot to scale, rotate and position
         the 3D object. DO NOT USE mesh.
         */
+
+        // boxHelper = new THREE.BoxHelper(mesh, new THREE.Color(0xFF0000));
+		    // scene.add(boxHelper);
+        
+        //console.log(boxHelper);
+        // const box = new THREE.Box3();
+        // box.setFromCenterAndSize( boxHelper.geometry.boundingBox.min, boxHelper.geometry.boundingBox.max );
+
+        // const helper = new THREE.Box3Helper( box, 0xffff00 );
+        // scene.add( helper );
+
+        boxHelper = new THREE.BoxHelper(pivot.children[0] , new THREE.Color(0xFF0000));        
+        scene.add(boxHelper);
+
+        
+
 
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
@@ -94,6 +117,17 @@
     var light2 = new THREE.AmbientLight( 0x20202A, 20, 100 );
     light2.position.set( 30, -10, 30 );
     scene.add( light2 );
+
+    // const sphere = new THREE.SphereGeometry();
+    // const object = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( 0xff0000 ) );
+    // const box = new THREE.BoxHelper(mesh, 0xffff00 );
+    // scene.add( box );
+
+    // const helper = new THREE.BoxHelper(pivot);
+    // helper.geometry.computeBoundingBox();
+    // console.log(helper.geometry.boundingBox);
+
+
   };
 
   function modelLoaded() {
@@ -115,6 +149,17 @@
       // pivot.rotation.set(0, angle, 0);
       //mesh.rotation.y += 0.01;
       pivot.scale.set(scale, scale, scale);
+      if (boxHelper) {
+        boxHelper.update();
+      }
+      boundingBox = new THREE.Box3().set(new THREE.Vector3( x, y, 0 ), 
+                                          new THREE.Vector3( x+3, y+3, 0 )
+                                          );
+        helper = new THREE.Box3Helper( boundingBox , 0xffff00 );
+        scene.add( helper );
+      // if (helper) {
+      //   helper.updateMatrixWorld();
+      // }
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -185,10 +230,10 @@
         ctx.save();
         ctx.restore();
       });
-
+      
       loadModels();
       animate();
-    }
+    } 
   });
 
   $: if (poses && mesh) {
@@ -213,6 +258,7 @@
     //console.log(meshPosition.x);
     eyesPosition.y = ((-((leftEye.position.y / VIDEO_HEIGHT) * 2 - 1))+(-((rightEye.position.y / VIDEO_HEIGHT) * 2 - 1)))/2;
     raycaster.setFromCamera(eyesPosition, camera);
+    //console.log("Eyes Position: ",leftEye,rightEye);
     const distEye = pivot.position.clone().sub(camera.position).length();
     // console.log(distEye);
     raycaster.ray.at(distEye, pivot.position);
@@ -223,16 +269,24 @@
       case 38:
         scale += 0.01;
         // pitchFactor += 1;
+        x+=0.1;
+        y+=0.1;
         break;
 
       case 40:
         scale -= 0.01;
         // pitchFactor -= 1;
+        x-=0.1;
+        y-=0.1;
         break;
       
       case 67:
         // console.log(pitchFactor);
-        console.log(scale);
+        //console.log(scale);
+        //console.log(pivot);
+        //console.log(x,y);
+        //console.log(leftEye, rightEye);
+
     
       default:
         break;
