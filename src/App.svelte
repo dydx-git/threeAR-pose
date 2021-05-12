@@ -127,9 +127,11 @@
       ctx.strokeRect(xCo, yCo, wDm, hDm);
 
       xCoPosition = (VIDEO_WIDTH - xCo)/VIDEO_WIDTH;
-      if (leftEarPosition > xCoPosition) {
-        pivot.scale.set(scale, scale, scale);
+      scale = (scale / xCoPosition) * leftEarPosition;
+      if (xCoPosition == NaN ) {
+        scale = 1;
       }
+      pivot.scale.set(scale, scale, scale);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
