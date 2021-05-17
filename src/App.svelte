@@ -22,8 +22,8 @@
   let pitchFactor = 75;
   let farPlaneFactor = 5;
   let boundingBox2D;
-
-  let xCo,yCo, xCoPosition;
+  let scalingFactor = 6.4935; // Calculated at scale = 1. Got ear distance to be 0.544 
+  let xCo,yCo, xCoPosition,xCoPositionMax;
   const PATH = "/assets/models/";
   const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
   // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
@@ -126,12 +126,13 @@
       ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
       ctx.strokeRect(xCo, yCo, wDm, hDm);
 
-      xCoPosition = (VIDEO_WIDTH - xCo)/VIDEO_WIDTH;
-      scale = (scale / xCoPosition) * leftEarPosition;
-      if (xCoPosition == NaN ) {
-        scale = 1;
+      //xCoPosition = (VIDEO_WIDTH - xCo)/VIDEO_WIDTH;
+      //xCoPositionMax = VIDEO_WIDTH - (((boundingBox2D.max.x + 1) * VIDEO_WIDTH) / 2)/VIDEO_WIDTH;
+      if (scale) {
+        //scale = (scale / (xCoPosition)) * (leftEarPosition);
+        scale = (leftEarPosition-rightEarPosition)*scalingFactor;
+        pivot.scale.set(scale, scale, scale); 
       }
-      pivot.scale.set(scale, scale, scale);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -253,8 +254,9 @@
         console.log(`scale: ${scale}`);
         //console.log(`z position: ${pivot.position.z}`);
         //console.log(`mesh: ${mesh}`);
-        console.log(`Left Ear: ${leftEarPosition} Right Ear: ${rightEarPosition}`);
-        console.log(xCoPosition);
+        //console.log(`Left Ear: ${leftEarPosition} Right Ear: ${rightEarPosition}`);
+        console.log(`Ear diff: ${leftEarPosition-rightEarPosition}`);
+        //console.log(`Model X: ${xCoPosition}`);
       default:
         break;
     }
