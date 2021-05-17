@@ -128,11 +128,9 @@
 
       //xCoPosition = (VIDEO_WIDTH - xCo)/VIDEO_WIDTH;
       //xCoPositionMax = VIDEO_WIDTH - (((boundingBox2D.max.x + 1) * VIDEO_WIDTH) / 2)/VIDEO_WIDTH;
-      if (scale) {
         //scale = (scale / (xCoPosition)) * (leftEarPosition);
         scale = (leftEarPosition-rightEarPosition)*scalingFactor;
-        pivot.scale.set(scale, scale, scale); 
-      }
+        pivot.scale.set(scale, scale, scale);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
