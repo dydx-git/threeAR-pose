@@ -10,14 +10,20 @@ export function getFacePose(pose) {
   const rightEye = getPart("rightEye", pose)[0];
   const leftEar = getPart("leftEar", pose)[0];
   const rightEar = getPart("rightEar", pose)[0];
+  const leftShoulder = getPart("leftShoulder", pose)[0];
+  const rightShoulder = getPart("rightShoulder", pose)[0];
 
   const _yaw = Math.atan2(
     2 * nose.position.x - leftEye.position.x - rightEye.position.x,
     leftEye.position.x - rightEye.position.x
   );
+
+  
   return {
     yaw: getYaw(_yaw),
     pitch: getPitch(_yaw, nose.position, leftEar.position, rightEar.position),
+    leftShoulder: leftShoulder,
+    rightShoulder: rightShoulder
   };
 }
 
@@ -37,3 +43,4 @@ function getPitch(yaw, nose, leftEar, rightEar) {
     90
   );
 }
+
