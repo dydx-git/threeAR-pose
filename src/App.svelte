@@ -62,7 +62,7 @@
       preserveDrawingBuffer: true, // to allow screenshot
       alpha: true,
     });
-    renderer.setSize(VIDEO_WIDTH, VIDEO_HEIGHT);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     webglContainer.appendChild(renderer.domElement);
     stats = new Stats();
     stats.domElement.style.position = "absolute";
@@ -181,8 +181,8 @@
         poses = results;
         video.width = VIDEO_WIDTH;
         video.height = VIDEO_HEIGHT;
-        canvas.width = VIDEO_WIDTH;
-        canvas.height = VIDEO_HEIGHT;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         // ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         // ctx.translate(VIDEO_WIDTH, 0);
         // ctx.scale(-1, 1);
