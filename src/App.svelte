@@ -30,7 +30,7 @@
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
-      PATH + models[1],
+      PATH + models[0],
       // "https://s3-us-west-2.amazonaws.com/s.cdpn.io/39255/ladybug.gltf",
       //"/assets/models/glasses (1)/scene.gltf",
       function (gltf) {
@@ -129,8 +129,8 @@
       //xCoPosition = (VIDEO_WIDTH - xCo)/VIDEO_WIDTH;
       //xCoPositionMax = VIDEO_WIDTH - (((boundingBox2D.max.x + 1) * VIDEO_WIDTH) / 2)/VIDEO_WIDTH;
         //scale = (scale / (xCoPosition)) * (leftEarPosition);
-        scale = (leftEarPosition-rightEarPosition)*scalingFactor;
-        pivot.scale.set(scale, scale, scale);
+      scale = (leftEarPosition-rightEarPosition)*scalingFactor;
+      pivot.scale.set(scale, scale, scale);
     }
     // loop on request animation loop
     // - it has to be at the begining of the function
@@ -231,11 +231,13 @@
   }
   const handleKeydown = (e) => {
     switch (e.keyCode) {
-      case 38:
-        scale += 0.01;
+      case 38: 
+        //scale += 0.01;
+        mesh.position.y+=0.1;
         break;
       case 40:
-        scale -= 0.01;
+        //scale -= 0.01;
+        mesh.position.y-=0.1;
         break;
       // case 73:
       //   // scale -= 0.01;
@@ -246,23 +248,35 @@
       //   animate();
       //   console.log(`camera initalized with ${farPlaneFactor}`);
       //   break;
-      case 67:
+      case 67: // KEY C
         // console.log(pitchFactor);
         //console.log(`farPlaneVector: ${farPlaneFactor}`);
-        console.log(`scale: ${scale}`);
+        //console.log(`scale: ${scale}`);
         //console.log(`z position: ${pivot.position.z}`);
         //console.log(`mesh: ${mesh}`);
         //console.log(`Left Ear: ${leftEarPosition} Right Ear: ${rightEarPosition}`);
-        console.log(`Ear diff: ${leftEarPosition-rightEarPosition}`);
+        //console.log(`Ear diff: ${leftEarPosition-rightEarPosition}`);
         //console.log(`Model X: ${xCoPosition}`);
+
+        console.log("Mesh Position x-axis: "+ mesh.position.x);
+        console.log("Mesh Position y-axis: "+ mesh.position.y);
+      case 39:
+        mesh.position.x+=0.1;
+        break;
+      case 37:
+        mesh.position.x-=0.1;
+      case 66:
+        console.log("Mesh Position x-axis(BEFORE): "+ mesh.position.x);
+        console.log("Mesh Position y-axis(BEFORE): "+ mesh.position.y);
+        break;
       default:
         break;
     }
     if (
-      e.keyCode == 37 ||
-      e.keyCode == 38 ||
-      e.keyCode == 39 ||
-      e.keyCode == 40
+      e.keyCode == 37 ||  //left
+      e.keyCode == 38 || // up
+      e.keyCode == 39 ||  // right
+      e.keyCode == 40     // down
     )
       console.log("Arrow key pressed: " + e.keyCode);
   };
