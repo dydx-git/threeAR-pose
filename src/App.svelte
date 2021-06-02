@@ -265,6 +265,7 @@
         break;
       case 37:
         mesh.position.x-=0.1;
+        break;
       case 66:
         console.log("Mesh Position x-axis(BEFORE): "+ mesh.position.x);
         console.log("Mesh Position y-axis(BEFORE): "+ mesh.position.y);
