@@ -13,34 +13,26 @@
   let poseNetModel, poses;
   let VIDEO_WIDTH;
   let VIDEO_HEIGHT;
-  //let model = "glasses"; // Change it to mask to use mask.
+  let xOffset = 0.0;
+  let yOffset = 0.0;
   let scale = 2;
   let pitchFactor = 75;
   let farPlaneFactor = 5;
   const PATH = "/assets/models/";
   const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
-  // import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
       PATH + models[1],
-      // "https://s3-us-west-2.amazonaws.com/s.cdpn.io/39255/ladybug.gltf",
       //"/assets/models/glasses (1)/scene.gltf",
       function (gltf) {
-        //scene.add(gltf.scene);
         mesh = gltf.scene;
-        //const texture = new THREE.TextureLoader().load( "/assets/models/glasses/textures/Handles_baseColor.jpeg");
         const box = new THREE.Box3().setFromObject(mesh);
         box.getCenter(mesh.position);
         mesh.position.multiplyScalar(-1);
         pivot = new THREE.Group();
         scene.add(pivot);
         pivot.add(mesh);
-        /*      IMPORTANT
-        use the pivot to scale, rotate and position
-        the 3D object. DO NOT USE mesh.
-        */
-
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
       },
@@ -69,12 +61,8 @@
     meshPosition = new THREE.Vector2();
     eyesPosition = new THREE.Vector2(); // For glasses purposes
     scene = new THREE.Scene();
-
-    // const size = 1;
     // const near = 5;
-    // const far = 50;
 
-    // put a camera in the scene
     camera = new THREE.OrthographicCamera(
       -VIDEO_WIDTH / 200,
       VIDEO_WIDTH / 200,
@@ -99,42 +87,44 @@
   function modelLoaded() {
     console.log("Model Loaded!");
   }
-  //let controls = new THREE.OrbitControls(camera, renderer.domElement);
   // animation loop
   function animate() {
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
-      // console.log("Pitch ", pitch);
       let normalizedYaw = (yaw - 90) * (Math.PI / 180);
       let normalizedPitch = (pitch - pitchFactor) * (Math.PI / 180);
       if (normalizedYaw) {
         pivot.rotation.y = normalizedYaw; // Left Right
         pivot.rotation.x = -normalizedPitch; // Up down
       }
-      pivot.position.z = 1;
-      // pivot.rotation.y += 0.01;
       // pivot.rotation.set(0, angle, 0);
-      //mesh.rotation.y += 0.01;
       pivot.scale.set(scale, scale, scale);
+      drawKeypoints(ctx, poses);
+
+      const nose = getPart("nose", poses[0].pose)[0];
+      meshPosition.x = nose.position.x + xOffset;
+      meshPosition.y = nose.position.y + yOffset;
+
+      const leftEye = getPart("leftEye", poses[0].pose)[0];
+      const rightEye = getPart("rightEye", poses[0].pose)[0];
+      eyesPosition.x = (leftEye.position.x + rightEye.position.x) / 2;
+      eyesPosition.y = (leftEye.position.y + rightEye.position.y) / 2;
+      const pos3D = getWorldCoords(
+        eyesPosition.x + xOffset,
+        eyesPosition.y + yOffset,
+        VIDEO_HEIGHT,
+        VIDEO_WIDTH
+      );
+      pivot.position.set(pos3D.x, pos3D.y, 1);
+
+      // - it has to be at the begining of the function
+      stats.update();
     }
-    // loop on request animation loop
-    // - it has to be at the begining of the function
-    // - see details at http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
     requestAnimationFrame(animate);
-
-    // do the render
     render();
-
-    // update stats
-    stats.update();
   }
-
-  // render the scene
   function render() {
-    // update camera controls
     // cameraControls.update();
-
-    // actually render the scene
 
     renderer.render(scene, camera);
   }
@@ -143,8 +133,6 @@
     let stream = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      /* use the stream */
     } catch (err) {
       console.log("error in getting input stream: " + err.message);
     }
@@ -192,75 +180,48 @@
     }
   });
 
-  $: if (poses && mesh) {
-    drawKeypoints(ctx, poses);
-    const nose = getPart("nose", poses[0].pose)[0];
-    //console.log(leftEye);
-    //drawPoint(ctx, , 2 * nose.position.x - leftEye.position.x - rightEye.position.x, )
-    meshPosition.x = -((nose.position.x / VIDEO_WIDTH) * 2 - 1);
-    //console.log(meshPosition.x);
-    meshPosition.y = -(nose.position.y / VIDEO_HEIGHT) * 2 + 1;
-    raycaster.setFromCamera(meshPosition, camera);
-    const dist = pivot.position.clone().sub(camera.position).length();
-    // console.log(dist);
-    raycaster.ray.at(dist, pivot.position);
-    // // mesh.position.set(nosePose.x, nosePose.y, 40);
+  function getWorldCoords(x, y, height, width) {
+    // (-1,1), (1,1), (-1,-1), (1, -1)
+    console.log(`y coords with offset: ${x}`);
+    var normalizedPointOnScreen = new THREE.Vector3();
+    normalizedPointOnScreen.x = -((x / width) * 2 - 1);
+    normalizedPointOnScreen.y = -(y / height) * 2 + 1;
+    normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
+    normalizedPointOnScreen.unproject(camera);
+    normalizedPointOnScreen.sub(camera.position).normalize();
+    var distance = -camera.position.z / normalizedPointOnScreen.z,
+      scaled = normalizedPointOnScreen.multiplyScalar(distance),
+      coords = camera.position.clone().add(scaled);
 
-    // For Glasses model
-    const leftEye = getPart("leftEye", poses[0].pose)[0];
-    const rightEye = getPart("rightEye", poses[0].pose)[0];
-    eyesPosition.x =
-      (-((leftEye.position.x / VIDEO_WIDTH) * 2 - 1) +
-        -((rightEye.position.x / VIDEO_WIDTH) * 2 - 1)) /
-      2;
-    //console.log(meshPosition.x);
-    eyesPosition.y =
-      (-((leftEye.position.y / VIDEO_HEIGHT) * 2 - 1) +
-        -((rightEye.position.y / VIDEO_HEIGHT) * 2 - 1)) /
-      2;
-    raycaster.setFromCamera(eyesPosition, camera);
-    const distEye = pivot.position.clone().sub(camera.position).length();
-    // console.log(distEye);
-    raycaster.ray.at(distEye, pivot.position);
+    return new THREE.Vector3(coords.x, coords.y, coords.z);
   }
 
   const handleKeydown = (e) => {
-    switch (e.keyCode) {
-      case 38:
-        scale += 0.01;
-        break;
+    const arrowKeysEnum = { up: 38, down: 40, left: 37, right: 39 };
+    const alphabetsEnum = { p: 80, s: 83, c: 67 };
+    Object.freeze(arrowKeysEnum);
+    Object.freeze(alphabetsEnum);
 
-      case 40:
-        scale -= 0.01;
-        break;
+    const deltaFactor = 10;
 
-      // case 73:
-      //   // scale -= 0.01;
-      //   // pivot.position.z -= 0.01;
-      //   // pitchFactor -= 1;
-      //   init();
-      //   loadModels();
-      //   animate();
-      //   console.log(`camera initalized with ${farPlaneFactor}`);
-      //   break;
-
-      case 67:
-        // console.log(pitchFactor);
-        console.log(`farPlaneVector: ${farPlaneFactor}`);
-        console.log(`scale: ${scale}`);
-        console.log(`z position: ${pivot.position.z}`);
-        console.log(`mesh: ${mesh}`);
-
-      default:
-        break;
+    if (e.ctrlKey && e.keyCode == arrowKeysEnum.up) {
+      yOffset -= deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.down) {
+      yOffset += deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.left) {
+      xOffset += deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.right) {
+      xOffset -= deltaFactor;
     }
-    if (
-      e.keyCode == 37 ||
-      e.keyCode == 38 ||
-      e.keyCode == 39 ||
-      e.keyCode == 40
-    )
-      console.log("Arrow key pressed: " + e.keyCode);
+    if (e.shiftKey && e.keyCode == arrowKeysEnum.up) {
+      scale += deltaFactor * 0.005;
+    } else if (e.shiftKey && e.keyCode == arrowKeysEnum.down) {
+      scale -= deltaFactor * 0.005;
+    }
+    if (e.keyCode == alphabetsEnum.c) {
+      console.log(`position: ${yOffset}`);
+      console.log(`scale: ${scale}`);
+    }
   };
 </script>
 
@@ -287,8 +248,6 @@
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
-
-  /* make the canvases, children of the this container */
   #container {
     position: relative;
   }
@@ -296,24 +255,19 @@
   #webglContainer {
     position: absolute;
     pointer-events: none;
-    /* this element will not catch any events */
     z-index: 8;
-    /* position this canvas at bottom of the other one */
   }
 
   #videoContainer {
     position: absolute;
     pointer-events: none;
-    /* this element will not catch any events */
     z-index: 6;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
-    /* position this canvas at bottom of the other one */
   }
 
   #threeContainer {
     position: absolute;
     z-index: 10;
-    /* position this canvas on top of the other one */
   }
 </style>
