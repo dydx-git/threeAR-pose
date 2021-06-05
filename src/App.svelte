@@ -22,6 +22,8 @@
   } = getImports();
 
   let scale = 2;
+  let xOffset = 0.0;
+  let yOffset = 0.0;
 
   const PATH = "/assets/models/";
   const MODELS = { MASK: "mask.gltf", SPECTACLES: "glasses/scene.gltf", COSTUME: "alien/alienSuit.gltf" };
@@ -54,7 +56,7 @@
     let stream, model;
     [stream, model, poseDetector] = await Promise.all([
       getStream(),
-      loadModel(MODELS.COSTUME),
+      loadModel(MODELS.MASK),
       initPosenet(),
     ]);
 
@@ -125,7 +127,7 @@
       FaceRotation(pivot, poses);
       pivot.scale.set(scale, scale, scale);
 
-      Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////---Mask Model
+      Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera, xOffset, yOffset); ////---Mask Model
       //pivot = Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////--- Spectacles Model
       //TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
      }
@@ -162,34 +164,30 @@
   }
 
   const handleKeydown = (e) => {
-    switch (e.keyCode) {
-      case 38:
-        ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
-        break;
+    const arrowKeysEnum = { up: 38, down: 40, left: 37, right: 39 };
+    const alphabetsEnum = { p: 80, s: 83, c: 67 };
+    Object.freeze(arrowKeysEnum);  //Ctrl + arrow keys to change position
+    Object.freeze(alphabetsEnum);  //Shift + arrow keys to change scaling of model.
+    const deltaFactor = 10;
 
-      case 40:
-        //scale -= 0.01;
-        break;
-
-      // case 73:
-      //   // scale -= 0.01;
-      //   console.log(`camera initalized with ${farPlaneFactor}`);
-      //   break;
-
-      case 67:
-        console.log(`z position: ${pivot.position.z}`);
-        console.log(`mesh: ${mesh}`);
-
-      default:
-        break;
+    if (e.ctrlKey && e.keyCode == arrowKeysEnum.up) {
+      yOffset -= deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.down) {
+      yOffset += deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.left) {
+      xOffset += deltaFactor;
+    } else if (e.ctrlKey && e.keyCode == arrowKeysEnum.right) {
+      xOffset -= deltaFactor;
     }
-    if (
-      e.keyCode == 37 ||
-      e.keyCode == 38 ||
-      e.keyCode == 39 ||
-      e.keyCode == 40
-    )
-      console.log("Arrow key pressed: " + e.keyCode);
+    if (e.shiftKey && e.keyCode == arrowKeysEnum.up) {
+      scale += deltaFactor * 0.005;
+    } else if (e.shiftKey && e.keyCode == arrowKeysEnum.down) {
+      scale -= deltaFactor * 0.005;
+    }
+    if (e.keyCode == alphabetsEnum.c) {
+      console.log(`position: ${yOffset}`);
+      console.log(`scale: ${scale}`);
+    }
   };
 
   $: console.log(isVideoLoaded);

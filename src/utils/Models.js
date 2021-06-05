@@ -3,8 +3,6 @@ import * as THREE from "three/build/three.module";
 import {rotateJoint} from "./transform";
 
 let pitchFactor = 75;
-let xOffset = 0.0;
-let yOffset = 0.0;
 const raycaster = new THREE.Raycaster();
 const meshPosition = new THREE.Vector2();
 
@@ -19,7 +17,7 @@ export function FaceRotation(pivot,poses){
        }
 }
 
-export function Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera){
+export function Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera, xOffset, yOffset){
     
     const nose = getPart("nose", poses[0])[0];
     meshPosition.x = nose.x + xOffset;
@@ -35,13 +33,13 @@ export function Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera){
       VIDEO_WIDTH, 
       camera
     );
-    pivot.position.set(pos3D.x, pos3D.y, 1);
+    //pivot.position.set(pos3D.x, pos3D.y, 1);
 
     return pivot;
     
 }
 
-export function Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera){
+export function Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera,xOffset, yOffset){
     const leftEye = getPart("left_eye", poses[0])[0];
     const rightEye = getPart("right_eye", poses[0])[0];
     const eyesPosition = new THREE.Vector2();
@@ -119,7 +117,7 @@ export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, came
 
 function getWorldCoords(x, y, height, width,camera) {
   // (-1,1), (1,1), (-1,-1), (1, -1)
-  console.log(`y coords with offset: ${x}`);
+  //console.log(`y coords with offset: ${x}`);
   var normalizedPointOnScreen = new THREE.Vector3();
   normalizedPointOnScreen.x = -((x / width) * 2 - 1);
   normalizedPointOnScreen.y = -(y / height) * 2 + 1;
