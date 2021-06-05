@@ -3,6 +3,8 @@ import * as THREE from "three/build/three.module";
 import {rotateJoint} from "./transform";
 
 let pitchFactor = 75;
+let xOffset = 0.0;
+let yOffset = 0.0;
 const raycaster = new THREE.Raycaster();
 const meshPosition = new THREE.Vector2();
 
@@ -20,11 +22,22 @@ export function FaceRotation(pivot,poses){
 export function Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera){
     
     const nose = getPart("nose", poses[0])[0];
-    meshPosition.x = -((nose.x / VIDEO_WIDTH) * 2 - 1);
-    meshPosition.y = -(nose.y / VIDEO_HEIGHT) * 2 + 1.30;
-    raycaster.setFromCamera(meshPosition, camera);
-    const dist = pivot.position.clone().sub(camera.position).length();
-    raycaster.ray.at(dist, pivot.position);
+    meshPosition.x = nose.x + xOffset;
+    meshPosition.y = nose.y + yOffset;
+    //raycaster.setFromCamera(meshPosition, camera);
+    //const dist = pivot.position.clone().sub(camera.position).length();
+    //raycaster.ray.at(dist, pivot.position);
+
+    const pos3D = getWorldCoords(
+      meshPosition.x + xOffset,
+      meshPosition.y + yOffset,
+      VIDEO_HEIGHT,
+      VIDEO_WIDTH, 
+      camera
+    );
+    pivot.position.set(pos3D.x, pos3D.y, 1);
+
+    return pivot;
     
 }
 
@@ -32,17 +45,21 @@ export function Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera){
     const leftEye = getPart("left_eye", poses[0])[0];
     const rightEye = getPart("right_eye", poses[0])[0];
     const eyesPosition = new THREE.Vector2();
-    eyesPosition.x =
-   (-((leftEye.x / VIDEO_WIDTH) * 2 - 1) +
-   -((rightEye.x / VIDEO_WIDTH) * 2 - 1)) /
-   2;
-   eyesPosition.y =
-    (-((leftEye.y / VIDEO_HEIGHT) * 2 - 1) +
-       -((rightEye.y / VIDEO_HEIGHT) * 2 - 1)) /
-     2;
-    raycaster.setFromCamera(eyesPosition, camera);
-    const distEye = pivot.position.clone().sub(camera.position).length();
-    raycaster.ray.at(distEye, pivot.position);
+    eyesPosition.x = (leftEye.x + rightEye.x) / 2;
+    eyesPosition.y = (leftEye.y + rightEye.y) / 2;
+    //raycaster.setFromCamera(eyesPosition, camera);
+    //const distEye = pivot.position.clone().sub(camera.position).length();
+    //raycaster.ray.at(distEye, pivot.position);
+
+    const pos3D = getWorldCoords(
+      eyesPosition.x + xOffset,
+      eyesPosition.y + yOffset,
+      VIDEO_HEIGHT,
+      VIDEO_WIDTH, camera
+    );
+    pivot.position.set(pos3D.x, pos3D.y, 1);
+
+    return pivot;
 }
 
 export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera){
@@ -98,4 +115,19 @@ export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, came
             const dist = pivot.position.clone().sub(camera.position).length();
             raycaster.ray.at(dist, pivot.position);
             
+}
+
+function getWorldCoords(x, y, height, width,camera) {
+  // (-1,1), (1,1), (-1,-1), (1, -1)
+  console.log(`y coords with offset: ${x}`);
+  var normalizedPointOnScreen = new THREE.Vector3();
+  normalizedPointOnScreen.x = -((x / width) * 2 - 1);
+  normalizedPointOnScreen.y = -(y / height) * 2 + 1;
+  normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
+  normalizedPointOnScreen.unproject(camera);
+  normalizedPointOnScreen.sub(camera.position).normalize();
+  var distance = -camera.position.z / normalizedPointOnScreen.z,
+    scaled = normalizedPointOnScreen.multiplyScalar(distance),
+    coords = camera.position.clone().add(scaled);
+  return new THREE.Vector3(coords.x, coords.y, coords.z), camera;
 }

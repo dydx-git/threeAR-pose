@@ -125,9 +125,9 @@
       FaceRotation(pivot, poses);
       pivot.scale.set(scale, scale, scale);
 
-      //Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////---Mask Model
-      //Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////--- Spectacles Model
-      TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
+      Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////---Mask Model
+      //pivot = Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////--- Spectacles Model
+      //TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
      }
 
     // do the render
