@@ -114,7 +114,22 @@
     return ctx;
   }
 
-  const meshPosition = new THREE.Vector2();
+  function getWorldCoords(x, y, height, width) {
+  // (-1,1), (1,1), (-1,-1), (1, -1)
+  //console.log(`y coords with offset: ${x}`);
+  var normalizedPointOnScreen = new THREE.Vector3();
+  normalizedPointOnScreen.x = -((x / width) * 2 - 1);
+  normalizedPointOnScreen.y = -(y / height) * 2 + 1;
+  normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
+  normalizedPointOnScreen.unproject(camera);
+  normalizedPointOnScreen.sub(camera.position).normalize();
+  var distance = -camera.position.z / normalizedPointOnScreen.z,
+    scaled = normalizedPointOnScreen.multiplyScalar(distance),
+    coords = camera.position.clone().add(scaled);
+  return new THREE.Vector3(coords.x, coords.y, coords.z), camera;
+}
+
+  
   // animation loop
   async function animate() {
     requestAnimationFrame(animate);
@@ -127,9 +142,17 @@
       FaceRotation(pivot, poses);
       pivot.scale.set(scale, scale, scale);
 
-      Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera, xOffset, yOffset); ////---Mask Model
-      //pivot = Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera); ////--- Spectacles Model
+      const meshPosition =  Mask(poses,xOffset, yOffset); ////---Mask Model
+      //const meshPosition = Glasses(poses,xOffset, yOffset); ////--- Spectacles Model
       //TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
+
+      const pos3D = getWorldCoords(
+        meshPosition.x,
+        meshPosition.y,
+        VIDEO_HEIGHT,
+        VIDEO_WIDTH
+      );
+      pivot.position.set(pos3D);
      }
 
     // do the render

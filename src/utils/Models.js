@@ -17,47 +17,24 @@ export function FaceRotation(pivot,poses){
        }
 }
 
-export function Mask(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera, xOffset, yOffset){
+export function Mask(poses, xOffset, yOffset){
     
     const nose = getPart("nose", poses[0])[0];
     meshPosition.x = nose.x + xOffset;
     meshPosition.y = nose.y + yOffset;
-    //raycaster.setFromCamera(meshPosition, camera);
-    //const dist = pivot.position.clone().sub(camera.position).length();
-    //raycaster.ray.at(dist, pivot.position);
-
-    const pos3D = getWorldCoords(
-      meshPosition.x + xOffset,
-      meshPosition.y + yOffset,
-      VIDEO_HEIGHT,
-      VIDEO_WIDTH, 
-      camera
-    );
-    //pivot.position.set(pos3D.x, pos3D.y, 1);
-
-    return pivot;
+  
+    return meshPosition;
     
 }
 
-export function Glasses(poses,VIDEO_WIDTH, VIDEO_HEIGHT, pivot, camera,xOffset, yOffset){
+export function Glasses(poses, xOffset, yOffset){
     const leftEye = getPart("left_eye", poses[0])[0];
     const rightEye = getPart("right_eye", poses[0])[0];
     const eyesPosition = new THREE.Vector2();
-    eyesPosition.x = (leftEye.x + rightEye.x) / 2;
-    eyesPosition.y = (leftEye.y + rightEye.y) / 2;
-    //raycaster.setFromCamera(eyesPosition, camera);
-    //const distEye = pivot.position.clone().sub(camera.position).length();
-    //raycaster.ray.at(distEye, pivot.position);
+    eyesPosition.x = ((leftEye.x + rightEye.x) / 2) + xOffset;
+    eyesPosition.y = ((leftEye.y + rightEye.y) / 2) + yOffset;
 
-    const pos3D = getWorldCoords(
-      eyesPosition.x + xOffset,
-      eyesPosition.y + yOffset,
-      VIDEO_HEIGHT,
-      VIDEO_WIDTH, camera
-    );
-    pivot.position.set(pos3D.x, pos3D.y, 1);
-
-    return pivot;
+    return eyesPosition;
 }
 
 export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera){
@@ -115,17 +92,3 @@ export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, came
             
 }
 
-function getWorldCoords(x, y, height, width,camera) {
-  // (-1,1), (1,1), (-1,-1), (1, -1)
-  //console.log(`y coords with offset: ${x}`);
-  var normalizedPointOnScreen = new THREE.Vector3();
-  normalizedPointOnScreen.x = -((x / width) * 2 - 1);
-  normalizedPointOnScreen.y = -(y / height) * 2 + 1;
-  normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
-  normalizedPointOnScreen.unproject(camera);
-  normalizedPointOnScreen.sub(camera.position).normalize();
-  var distance = -camera.position.z / normalizedPointOnScreen.z,
-    scaled = normalizedPointOnScreen.multiplyScalar(distance),
-    coords = camera.position.clone().add(scaled);
-  return new THREE.Vector3(coords.x, coords.y, coords.z), camera;
-}
