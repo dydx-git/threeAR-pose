@@ -18,7 +18,7 @@
     Glasses,
     FaceRotation,
     get_spread_update,
-    TraverseBones
+    TraverseBones,
   } = getImports();
 
   let scale = 2;
@@ -26,15 +26,19 @@
   let yOffset = 0.0;
 
   const PATH = "/assets/models/";
-  const MODELS = { MASK: "mask.gltf", SPECTACLES: "glasses/scene.gltf", COSTUME: "alien/alienSuit.gltf" };
+  const MODELS = {
+    MASK: "mask.gltf",
+    SPECTACLES: "glasses/scene.gltf",
+    COSTUME: "alien/alienSuit.gltf",
+  };
   const canvas = document.createElement("CANVAS");
   let ctx = get2DCanvasContext(canvas);
-  
+
   const stats = new Stats();
   stats.domElement.style.position = "absolute";
   stats.domElement.style.bottom = "0px";
   document.body.appendChild(stats.domElement);
- 
+
   const renderer = new THREE.WebGLRenderer({
     antialias: true, // to get smoother output
     preserveDrawingBuffer: true, // to allow screenshot
@@ -42,13 +46,13 @@
   });
 
   const scene = new THREE.Scene();
-  
+
   getTHREEbasics(scene);
 
   let isVideoLoaded = false;
   let video;
   let camera;
-  let mesh,pivot;
+  let mesh, pivot;
   let VIDEO_HEIGHT, VIDEO_WIDTH;
   let poseDetector, poses;
 
@@ -114,22 +118,21 @@
     return ctx;
   }
 
-  function getWorldCoords(x, y, height, width) {
-  // (-1,1), (1,1), (-1,-1), (1, -1)
-  //console.log(`y coords with offset: ${x}`);
-  var normalizedPointOnScreen = new THREE.Vector3();
-  normalizedPointOnScreen.x = -((x / width) * 2 - 1);
-  normalizedPointOnScreen.y = -(y / height) * 2 + 1;
-  normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
-  normalizedPointOnScreen.unproject(camera);
-  normalizedPointOnScreen.sub(camera.position).normalize();
-  var distance = -camera.position.z / normalizedPointOnScreen.z,
-    scaled = normalizedPointOnScreen.multiplyScalar(distance),
-    coords = camera.position.clone().add(scaled);
-  return new THREE.Vector3(coords.x, coords.y, coords.z), camera;
-}
+  function getWorldCoords(x, y, height, width, camera) {
+    // (-1,1), (1,1), (-1,-1), (1, -1)
+    //console.log(`y coords with offset: ${x}`);
+    var normalizedPointOnScreen = new THREE.Vector3();
+    normalizedPointOnScreen.x = -((x / width) * 2 - 1);
+    normalizedPointOnScreen.y = -(y / height) * 2 + 1;
+    normalizedPointOnScreen.z = 0.0; // set to z position of mesh objects
+    normalizedPointOnScreen.unproject(camera);
+    normalizedPointOnScreen.sub(camera.position).normalize();
+    var distance = -camera.position.z / normalizedPointOnScreen.z,
+      scaled = normalizedPointOnScreen.multiplyScalar(distance),
+      coords = camera.position.clone().add(scaled);
+    return new THREE.Vector3(coords.x, coords.y, coords.z);
+  }
 
-  
   // animation loop
   async function animate() {
     requestAnimationFrame(animate);
@@ -138,11 +141,10 @@
     drawKeypoints(ctx, poses);
 
     if (mesh && pivot && poses) {
-      
-      FaceRotation(pivot, poses);
+      pivot = FaceRotation(pivot, poses);
       pivot.scale.set(scale, scale, scale);
 
-      const meshPosition =  Mask(poses,xOffset, yOffset); ////---Mask Model
+      const meshPosition = Mask(poses, xOffset, yOffset); ////---Mask Model
       //const meshPosition = Glasses(poses,xOffset, yOffset); ////--- Spectacles Model
       //TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
 
@@ -150,13 +152,15 @@
         meshPosition.x,
         meshPosition.y,
         VIDEO_HEIGHT,
-        VIDEO_WIDTH
+        VIDEO_WIDTH,
+        camera
       );
-      pivot.position.set(pos3D);
-     }
+      console.log(pos3D);
+      pivot.position.set(pos3D.x, pos3D.y, pos3D.z);
+    }
 
     // do the render
-      render();
+    render();
 
     // update stats
     stats.update();
@@ -182,15 +186,14 @@
   });
 
   $: if (isVideoLoaded) {
-
     animate();
   }
 
   const handleKeydown = (e) => {
     const arrowKeysEnum = { up: 38, down: 40, left: 37, right: 39 };
     const alphabetsEnum = { p: 80, s: 83, c: 67 };
-    Object.freeze(arrowKeysEnum);  //Ctrl + arrow keys to change position
-    Object.freeze(alphabetsEnum);  //Shift + arrow keys to change scaling of model.
+    Object.freeze(arrowKeysEnum); //Ctrl + arrow keys to change position
+    Object.freeze(alphabetsEnum); //Shift + arrow keys to change scaling of model.
     const deltaFactor = 10;
 
     if (e.ctrlKey && e.keyCode == arrowKeysEnum.up) {

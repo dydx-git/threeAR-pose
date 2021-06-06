@@ -15,6 +15,7 @@ export function FaceRotation(pivot,poses){
         pivot.rotation.y = normalizedYaw; // Left Right
         pivot.rotation.x = -normalizedPitch; // Up down
        }
+    return pivot;
 }
 
 export function Mask(poses, xOffset, yOffset){
