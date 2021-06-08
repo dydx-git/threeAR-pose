@@ -60,7 +60,7 @@
     let stream, model;
     [stream, model, poseDetector] = await Promise.all([
       getStream(),
-      loadModel(MODELS.MASK),
+      loadModel(MODELS.COSTUME),
       initPosenet(),
     ]);
 
@@ -144,9 +144,9 @@
       pivot = FaceRotation(pivot, poses);
       pivot.scale.set(scale, scale, scale);
 
-      const meshPosition = Mask(poses, xOffset, yOffset); ////---Mask Model
-      //const meshPosition = Glasses(poses,xOffset, yOffset); ////--- Spectacles Model
-      //TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera); ////--- Suit Model
+      //const meshPosition = Mask(poses, xOffset, yOffset); ////---Mask Model
+      //const meshPosition = Glasses(poses, xOffset, yOffset); ////--- Spectacles Model
+      const meshPosition = TraverseBones(mesh, poses, xOffset, yOffset); ////--- Suit Model
 
       const pos3D = getWorldCoords(
         meshPosition.x,

@@ -38,7 +38,7 @@ export function Glasses(poses, xOffset, yOffset){
     return eyesPosition;
 }
 
-export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, camera){
+export function TraverseBones( mesh,poses, xOffset, yOffset){
     //pivot.position.set(0, -1, 1);
 
     const leftArmPoints = rotateJoint('right_shoulder', 'left_shoulder','left_elbow',poses[0]);
@@ -59,20 +59,20 @@ export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, came
 
 
             if(child.isBone && child.name === 'mixamorigRightForeArm'){
-                child.rotation.x = (rightForeArmPoints) * 1.8;
+                child.rotation.x = (rightForeArmPoints.Angle) * 1.8;
                 // controls.attach(child);
               }
   
               if(child.isBone && child.name === 'mixamorigRightArm'){
-                child.rotation.x = (rightArmPoints) * 1.8;
+                child.rotation.x = (rightArmPoints.Angle) * 1.8;
                 // controls.attach(child);
               }
               if(child.isBone && child.name === 'mixamorigLeftForeArm'){
-                child.rotation.x = (leftForeArmPoints) * 2;
+                child.rotation.x = (leftForeArmPoints.Angle) * 2;
                 // controls.attach(child);
               }
               if(child.isBone && child.name === 'mixamorigLeftArm'){
-                child.rotation.x = (leftArmPoints) * 2;
+                child.rotation.x = (leftArmPoints.Angle) * 2;
                 // controls.attach(child);
               }
             }
@@ -81,15 +81,13 @@ export function TraverseBones(pivot, mesh,poses, VIDEO_WIDTH, VIDEO_HEIGHT, came
             const meshPosition = new THREE.Vector2();
             let rightShoulder = getPart("right_shoulder", poses[0])[0];
             let leftShoulder = getPart("left_shoulder", poses[0])[0];
-            const x1 = -((leftShoulder.x / VIDEO_WIDTH) * 2 - 1);
-            const x2 = -((rightShoulder.x / VIDEO_WIDTH) * 2 - 1);
-            const y1 = -((leftShoulder.y / VIDEO_HEIGHT) * 2 );
-            const y2 =-((rightShoulder.y / VIDEO_HEIGHT) * 2 );
-            meshPosition.x = (x1 + x2) / 2 ;
-            meshPosition.y = (y1 + y2) / 2;
-            raycaster.setFromCamera(meshPosition, camera);
-            const dist = pivot.position.clone().sub(camera.position).length();
-            raycaster.ray.at(dist, pivot.position);
+           // raycaster.setFromCamera(meshPosition, camera);
+           // const dist = pivot.position.clone().sub(camera.position).length();
+            //raycaster.ray.at(dist, pivot.position);
+            meshPosition.x = ((leftShoulder.x + rightShoulder.x) / 2) + xOffset;
+            meshPosition.y = ((leftShoulder.y + rightShoulder.y) / 2) + yOffset;
+        
             
+            return meshPosition;
 }
 
