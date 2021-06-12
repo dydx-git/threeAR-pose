@@ -18,12 +18,13 @@
   let scale = 2;
   let pitchFactor = 75;
   let farPlaneFactor = 5;
+  let captureOpacity = 0;
   const PATH = "/assets/models/";
   const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
-      PATH + models[1],
+      PATH + models[0],
       //"/assets/models/glasses (1)/scene.gltf",
       function (gltf) {
         mesh = gltf.scene;
@@ -49,7 +50,7 @@
       preserveDrawingBuffer: true, // to allow screenshot
       alpha: true,
     });
-    renderer.setSize(VIDEO_WIDTH, VIDEO_HEIGHT);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     webglContainer.appendChild(renderer.domElement);
 
     stats = new Stats();
@@ -75,13 +76,13 @@
     camera.position.set(0, 0, 5);
     scene.add(camera);
 
-    var light = new THREE.PointLight(0xffffcc, 10, 200);
-    light.position.set(4, 30, -20);
-    scene.add(light);
+    // var light = new THREE.PointLight(0xffffcc, 10, 200);
+    // light.position.set(4, 30, -20);
+    // scene.add(light);
 
-    var light2 = new THREE.AmbientLight(0x20202a, 20, 100);
-    light2.position.set(30, -10, 30);
-    scene.add(light2);
+    // var light2 = new THREE.AmbientLight(0x20202a, 20, 100);
+    // light2.position.set(30, -10, 30);
+    // scene.add(light2);
   };
 
   function modelLoaded() {
@@ -166,8 +167,8 @@
         poses = results;
         video.width = VIDEO_WIDTH;
         video.height = VIDEO_HEIGHT;
-        canvas.width = VIDEO_WIDTH;
-        canvas.height = VIDEO_HEIGHT;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         ctx.translate(VIDEO_WIDTH, 0);
         ctx.scale(-1, 1);
@@ -218,6 +219,11 @@
     } else if (e.shiftKey && e.keyCode == arrowKeysEnum.down) {
       scale -= deltaFactor * 0.005;
     }
+    if (e.altKey && e.keyCode == arrowKeysEnum.up) {
+      captureOpacity += deltaFactor * 0.01;
+    } else if (e.altKey && e.keyCode == arrowKeysEnum.down) {
+      captureOpacity -= deltaFactor * 0.01;
+    }
     if (e.keyCode == alphabetsEnum.c) {
       console.log(`position: ${yOffset}`);
       console.log(`scale: ${scale}`);
@@ -227,7 +233,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<main>
+<main style="--capture-opacity: {captureOpacity}">
   <div id="container">
     <div id="webglContainer" />
     <div id="threeContainer" />
@@ -251,6 +257,9 @@
   #container {
     position: relative;
   }
+  html {
+    background-color: black;
+  }
 
   #webglContainer {
     position: absolute;
@@ -264,6 +273,7 @@
     z-index: 6;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
+    opacity: var(--capture-opacity);
   }
 
   #threeContainer {
