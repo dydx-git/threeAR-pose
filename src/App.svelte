@@ -15,12 +15,13 @@
   let VIDEO_HEIGHT;
   let xOffset = 0.0;
   let yOffset = 0.0;
-  let scale = 2;
+  let scale = 2.9;
   let pitchFactor = 75;
   let farPlaneFactor = 5;
   let captureOpacity = 0;
   const PATH = "/assets/models/";
   const models = ["mask.gltf", "glasses/scene.gltf", "glasses1/scene.gltf"];
+  let bitches = 0;
   const loadModels = () => {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
@@ -50,7 +51,7 @@
       preserveDrawingBuffer: true, // to allow screenshot
       alpha: true,
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, VIDEO_HEIGHT);
     webglContainer.appendChild(renderer.domElement);
 
     stats = new Stats();
@@ -63,6 +64,9 @@
     eyesPosition = new THREE.Vector2(); // For glasses purposes
     scene = new THREE.Scene();
     // const near = 5;
+    var light2 = new THREE.AmbientLight(0x20202a, 20, 100);
+    light2.position.set(30, -10, 30);
+    scene.add(light2);
 
     camera = new THREE.OrthographicCamera(
       -VIDEO_WIDTH / 200,
@@ -92,12 +96,12 @@
   function animate() {
     if (mesh && pivot && poses) {
       const { yaw, pitch } = getFacePose(poses[0].pose);
-      let normalizedYaw = (yaw - 90) * (Math.PI / 180);
-      let normalizedPitch = (pitch - pitchFactor) * (Math.PI / 180);
-      if (normalizedYaw) {
-        pivot.rotation.y = normalizedYaw; // Left Right
-        pivot.rotation.x = -normalizedPitch; // Up down
-      }
+      // let normalizedYaw = (yaw - 90) * (Math.PI / 180);
+      // let normalizedPitch = (pitch - pitchFactor) * (Math.PI / 180);
+      // if (normalizedYaw) {
+      //   pivot.rotation.y = normalizedYaw; // Left Right
+      //   pivot.rotation.x = -normalizedPitch; // Up down
+      // }
       // pivot.rotation.set(0, angle, 0);
       pivot.scale.set(scale, scale, scale);
       drawKeypoints(ctx, poses);
@@ -110,8 +114,10 @@
       const rightEye = getPart("rightEye", poses[0].pose)[0];
       eyesPosition.x = (leftEye.position.x + rightEye.position.x) / 2;
       eyesPosition.y = (leftEye.position.y + rightEye.position.y) / 2;
+      eyesPosition.x += bitches;
+      console.log(eyesPosition.x);
       const pos3D = getWorldCoords(
-        eyesPosition.x + xOffset,
+        eyesPosition.x + ((xOffset/100)*eyesPosition.x),
         eyesPosition.y + yOffset,
         VIDEO_HEIGHT,
         VIDEO_WIDTH
@@ -168,7 +174,7 @@
         video.width = VIDEO_WIDTH;
         video.height = VIDEO_HEIGHT;
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.height = VIDEO_HEIGHT;
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         ctx.translate(VIDEO_WIDTH, 0);
         ctx.scale(-1, 1);
@@ -183,7 +189,6 @@
 
   function getWorldCoords(x, y, height, width) {
     // (-1,1), (1,1), (-1,-1), (1, -1)
-    console.log(`y coords with offset: ${x}`);
     var normalizedPointOnScreen = new THREE.Vector3();
     normalizedPointOnScreen.x = -((x / width) * 2 - 1);
     normalizedPointOnScreen.y = -(y / height) * 2 + 1;
@@ -215,9 +220,9 @@
       xOffset -= deltaFactor;
     }
     if (e.shiftKey && e.keyCode == arrowKeysEnum.up) {
-      scale += deltaFactor * 0.005;
+      bitches += deltaFactor * 0.01;
     } else if (e.shiftKey && e.keyCode == arrowKeysEnum.down) {
-      scale -= deltaFactor * 0.005;
+      bitches -= deltaFactor * 0.01;
     }
     if (e.altKey && e.keyCode == arrowKeysEnum.up) {
       captureOpacity += deltaFactor * 0.01;
@@ -225,8 +230,8 @@
       captureOpacity -= deltaFactor * 0.01;
     }
     if (e.keyCode == alphabetsEnum.c) {
-      console.log(`position: ${yOffset}`);
-      console.log(`scale: ${scale}`);
+      console.log(`offsets: xOffset: ${xOffset}, yOffset: ${yOffset}`);
+      // console.log(`scale: ${scale}`);
     }
   };
 </script>
